@@ -1,0 +1,45 @@
+loading, isLoading = useState()
+lightMode, isLightMode = useState()
+
+func renderedComp() => {
+    if (lightMode && !isLoading) {
+        return (
+            <div style=white></div>
+            ... 300 lines
+        )
+    } else if (lightMode && isLoading) {
+        return (
+            <div>Loading...</div>
+        )
+    }
+}
+
+[
+    {lightMode && !isLoading => white},
+    {lightMode && isLoading => !white}
+]
+
+[
+    {loading: Bool},
+    {lightMode: Bool},
+    {hasWhiteBackground: Constraint},
+    {hasLoadingText: Constraint}
+]
+
+!loading => doesnt say loading
+
+And(lightMode, Not(isLoading)) => !hasLoadingText
+
+Implies(!loading,
+!hasLoadingText
+)
+
+
+{
+    bgColor: white,
+    textColor: gray
+}
+
+className= 'bg-gray align-top'
+
+Spec for milo
