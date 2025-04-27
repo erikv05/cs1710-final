@@ -36,7 +36,8 @@ Response:
 
 [ (list of failed property tests and their variable assignments. If everything passed, this should be empty)
     {
-        "violated_pbt" : String (PBT assertion that was violated, identified by name. empty if passed)
+        "violated_pbt" : String (PBT assertion that was violated, identified by name)
+        "transition used" : String (transition that was used, identified by name)
         "violating_state" : [
             {"variable_name" String: assignment Bool}
         ],(Array of variables that caused the violation. empty if passed)
