@@ -8,6 +8,7 @@ A few notes:
     "pbt_variables": [String] of all PBT variables that the user has defined. NOTE: The user will define the names of these variables *in the client* (they are arbitrary),
     "state_transitions": [
         {
+            "name" : string
             "lhs": (represents LHS of z3 implication) (conveyed in conjunctive normal form)
                 [
                     [{String variableName: Bool assignment} (a variable in a cnf clause. Implicitly joined with an OR to the next variable) ...] (one clause of the cnf formula. implicitly joined with an AND to the next clause)
@@ -24,7 +25,7 @@ A few notes:
     "pbt_assertions": (same as state_transitions, but each assertion has a name)
         [ 
             {
-                "assert_name" : String (used to identify failing asserts in the repsonse. these should be unique)
+                "name" : String
                 "lhs":[[{String variableName: Bool assignment}]] 
                 "rhs":[[{String variableName: Bool assignment}]]
             }
