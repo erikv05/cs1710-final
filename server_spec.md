@@ -40,7 +40,7 @@ Response:
         "transition used" : String (transition that was used, identified by name)
         "violating_state" : [
             {"variable_name" String: assignment Bool}
-        ],(Array of variables that caused the violation. empty if passed)
+        ],(Array of variables that caused the violation)
     }
 ]
 
