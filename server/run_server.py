@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from datatypes import *
-from solver import solve
+from solver import solveReq
 
 app = FastAPI()
 
@@ -31,7 +31,7 @@ def read_item(imp: NamedImplication):
 
 @app.post("/solve/")
 def read_item(req: SolverRequest):
-    return solve(req)
+    return solveReq(req)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
