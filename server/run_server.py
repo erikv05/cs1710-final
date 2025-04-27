@@ -1,23 +1,9 @@
-from typing import Union
 from fastapi import FastAPI
 import uvicorn
-from dataclasses import dataclass
+from datatypes import *
+from solver import solve
 
-@dataclass
-class literal:
-    variableName: str
-    assignment: bool
 app = FastAPI()
-
-@dataclass
-class cnfExpr:
-    list[literal]
-
-@dataclass
-class solverRequest:
-    state_variables: list[str]
-    pbt_variables: list[str]
-    ...
 
 
 
@@ -25,10 +11,27 @@ class solverRequest:
 def read_root():
     return {"Hello": "World"}
 
+@app.post("/items/")
+async def create_item(item: TestItem):
+    print(item.description)
+    return item.price * item.tax
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.post("/testlit/")
+def read_item(lit: Literal):
+    print(lit)
+    print(lit.assignment)
+    return {"item_id": 1, "q": "blah"}
+
+@app.post("/testNamedImp/")
+def read_item(imp: NamedImplication):
+    print(imp.name)
+    print(imp.lhs)
+    print(imp.lhs[0][0])
+    return {"item_id": 1, "q": "blah"}
+
+@app.post("/solve/")
+def read_item(req: SolverRequest):
+    return solve(req)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
