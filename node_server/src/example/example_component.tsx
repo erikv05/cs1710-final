@@ -27,19 +27,19 @@ const ExampleComponent: React.FC<ExampleComponentProps> = ({ initialDarkMode = f
     if (isLoading && isDarkMode) {
         return (
             <div className="example-component dark-mode">
-                <div className="loading-spinner" label="loading_dark">Loading...</div>
+                <div className="loading-spinner">Loading...</div>
             </div>
         );
     } else if (isLoading && !isDarkMode) {
         return (
             <div className="example-component light-mode">
-                <div className="loading-spinner" label="loading_light">Loading...</div>
+                <div className="loading-spinner">Loading...</div>
             </div>
         );
     } else if (!isLoading && isDarkMode) {
         return (
             <div className="example-component dark-mode">
-                <div className="content" label="loaded_dark">
+                <div className="content">
                     <h2>Example Component</h2>
                     <p>This component has loaded successfully.</p>
                     <button onClick={toggleDarkMode}>
@@ -51,7 +51,7 @@ const ExampleComponent: React.FC<ExampleComponentProps> = ({ initialDarkMode = f
     } else if (!isLoading && !isDarkMode) {
         return (
             <div className="example-component light-mode">
-                <div className="content" label="loaded_light">
+                <div className="content">
                     <h2>Example Component</h2>
                     <p>This component has loaded successfully.</p>
                     <button onClick={toggleDarkMode}>

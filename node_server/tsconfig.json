@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "target": "ESNext",
+        "jsx": "react-jsx",
         "module": "commonjs",
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
@@ -11,6 +12,6 @@
         "declaration": true,
         "sourceMap": true
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "node_server/utils/getState.ts", "node_server/utils/example.ts"],
     "exclude": ["node_modules", "dist"]
 }

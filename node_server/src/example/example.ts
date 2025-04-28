@@ -1,4 +1,4 @@
-import { testComponentProperties } from './getState';
+import { testComponentProperties } from '../utils/testComponentProperties';
 
 // Example usage for testing with different properties
 const filePath = "/mnt/c/Users/Erik/Desktop/lfs-final/example/example_component.tsx";
