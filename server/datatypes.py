@@ -14,7 +14,7 @@ class SolverRequest(BaseModel):
     state_transitions: NamedImplication
     pbt_assertions: NamedImplication
 
-class SolverResponse(BaseModel):
+class SolverResponseEntry(BaseModel):
     violated_pbt: str
     transition_used: str
     violating_state: list[Literal]

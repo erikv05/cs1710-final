@@ -1,9 +1,0 @@
-POST http://0.0.0.0:8000/items/
-Content-Type: application/json 
-
-{
-    "name": "Foo",
-    "description": "Foo is the most bar of the Foos",
-    "price": 1.2,
-    "tax": 3.4
-}
