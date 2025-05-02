@@ -1,0 +1,10 @@
+{
+    "state_variables": ["a", "b"],
+    "pbt_variables": ["c", "d"],
+    "state_transitions": [
+
+    ],
+    "pbt_assertions":[
+
+    ]
+}

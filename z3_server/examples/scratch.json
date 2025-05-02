@@ -1,0 +1,20 @@
+{
+    "name" : "assertion 1",
+    "lhs" : [
+        [{"name": "a", "assignment": false}]
+    ],
+    "rhs" :[
+        [{"name":"c", "assignment": true}]
+    ]
+}
+
+
+        {
+            "name" : "transition 1",
+            "lhs" : [
+                [{"name": "a", "assignment": false}]
+            ],
+            "rhs" :[
+                [{"name":"c", "assignment": false}]
+            ]
+        }
