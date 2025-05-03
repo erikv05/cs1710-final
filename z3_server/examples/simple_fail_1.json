@@ -8,7 +8,7 @@
                 [{"name": "a", "assignment": false}]
             ],
             "rhs" :[
-                [{"name":"c", "assignment": true}]
+                [{"name":"c", "assignment": false}]
             ]
         }
     ],
