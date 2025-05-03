@@ -14,7 +14,8 @@ def solveReq(req: SolverRequest) -> list[SolverResponseEntry]:
             print("is sat")
             model = solver.s.model()
             assignments = [Literal(name=var, assignment=bool(model[solver.vars[var]])) for var in solver.vars]
-            toReturn.append(SolverResponseEntry(violated_pbt=assertion, transition_used="TODO", violating_state=assignments))
+            transition_used = [transition for transition in solver.transitions if model[solver.transitions[transition]]][0]
+            toReturn.append(SolverResponseEntry(violated_pbt=assertion, transition_used=transition_used, violating_state=assignments))
         solver.s.pop()
     return toReturn
 
