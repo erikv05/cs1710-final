@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Union
 class Literal(BaseModel):
     name: str
     assignment: bool
@@ -24,8 +25,9 @@ class SolverRequest(BaseModel):
     pbt_assertion: PbtAssertion
 
 class SolverResponse(BaseModel):
+    result : str #passed or failed
     states: list[list[Literal]] #state trace, not a cnf
-    violated_pbt: Literal
+    violated_pbt: Literal #can be none
 
 
 
