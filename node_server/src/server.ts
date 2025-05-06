@@ -47,7 +47,7 @@ app.post('/', (req, res) => {
 
     // TODO: call z3 api
 
-    res.send({"result": "success", "data": results});
+    res.send({"result": {"success": true}, "data": results});
 });
 
 app.listen(port, () => {
