@@ -3,6 +3,9 @@ from typing import Union
 class Literal(BaseModel):
     name: str
     assignment: bool
+    #def __init__(self, name, assignmnet):
+     #   self.name = name
+      #  self.assignment = assignmnet
 
 class PbtAssertion(BaseModel): 
     name: str
@@ -10,7 +13,7 @@ class PbtAssertion(BaseModel):
 
 class Transition(BaseModel):
     name: str
-    valid_endstates: list[bool] 
+    assignments: list[bool] 
 
 class Branch(BaseModel):
     conditions: list[list[Literal]] #CNF criteria for being in this branch
@@ -27,7 +30,7 @@ class SolverRequest(BaseModel):
 class SolverResponse(BaseModel):
     result : str #passed or failed
     states: list[list[Literal]] #state trace, not a cnf
-    violated_pbt: Literal #can be none
+    violated_pbt: str #empty if nothing is violated
 
 
 

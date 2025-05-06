@@ -36,7 +36,7 @@
     }
   ],
   "preconditionals": [[{ "name": "isLoading", "assignment": false }]],
-  "pbt_assertions": {
+  "pbt_assertion": {
     "name": "hasDarkModeButton",
     "cnf": [[{ "name": "hasDarkModeButton", "assignment": true }]]
   }
