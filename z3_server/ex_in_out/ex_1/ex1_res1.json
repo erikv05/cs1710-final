@@ -1,0 +1,5 @@
+{
+  "result": "failed",
+  "violated_pbt": "hasDarkModeButton",
+  "states": [[{ "isLoading": true}, {"isDarkMode": false }]]
+}
