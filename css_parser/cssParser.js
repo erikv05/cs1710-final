@@ -4,15 +4,19 @@ const fs = require('fs');
 // Given a CSS class, and a property-value pair to check, confirms whether or not the given class ever has that property-value pair assigned.
 // Ex: checkCssPropertyValue('./test.css', 'body', 'background', '#ffffff')
 // Returns whether the test.css file's body class has a white background.
-function checkCssPropertyValue(cssFilepath, cssClass, property, value) {
+function checkCssPropertyValueByFilepath(cssFilepath, cssClass, property, value) {
     // Read file
     const cssCode = fs.readFileSync(cssFilepath, 'utf8');
+
+    return checkCssPropertyValue(cssCode, cssClass, property, value);
+}
+
+function checkCssPropertyValue(cssString, cssClass, property, value) {
     // Convert to object with css parser
-    const ast = css.parse(cssCode);
+    const ast = css.parse(cssString);
     
     // Print css object structure
     // console.log('AST:', JSON.stringify(ast, null, 2));
-
 
     // Traverse object
     if (ast) {
@@ -43,5 +47,5 @@ function checkCssPropertyValue(cssFilepath, cssClass, property, value) {
 
 // Test checking white background
 console.log("Testing checkCssPropertyValue for a white background: " +
-    checkCssPropertyValue('test.css', 'body', 'background', '#ffffff')
+    checkCssPropertyValueByFilepath('test.css', 'body', 'background', '#ffffff')
 )
