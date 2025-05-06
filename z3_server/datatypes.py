@@ -20,6 +20,10 @@ class SolverRequest(BaseModel):
     preconditionals: list[Literal]
     pbt_assertions: list[PbtAssertion]
 
+class SolverResponse(BaseModel):
+    states: list[list[Literal]]
+    violated_pbt: Literal
+
 
 
 
