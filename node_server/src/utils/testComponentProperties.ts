@@ -85,7 +85,7 @@ export function parseReactComponent(
     state_variables: Array.from(uniqueStateVars),
     pbt_variables: pbtVariables,
     branches,
-    preconditionals: properties[0].lhs, // TODO: change if we assume >1 PBT test per API req
+    preconditionals: properties.map(p => p.lhs),
     pbt_assertions: pbtAssertions
   };
   
@@ -486,7 +486,6 @@ export function scanComponentTransitions(filePath: string): { [branch: number]: 
   return branchTransitions;
 }
 
-// Add this to the export function to update the branches with transitions
 export function testComponentProperties(
   filePath: string, 
   properties: PBTAssertion[]
