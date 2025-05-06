@@ -20,8 +20,12 @@ class SolverRequest(BaseModel):
     preconditionals: list[Literal]
     pbt_assertions: list[PbtAssertion]
 
-    pbt_assertions: list[list[list[Literal]]] #List of 
 
+
+
+
+
+##VVVV OLD. IGNORE VVVV
 class SolverResponseEntry(BaseModel):
     violated_pbt: str
     transition_used: str
