@@ -1,4 +1,11 @@
+import { Branch } from "./SolverRequest";
+import { Literal } from "./PropertyDefinition";
+import { PbtAssertion } from "./SolverRequest";
+
 export interface PropertyTestResult {
-  lhs: Record<string, boolean>; // State conditions
-  rhs: Record<string, boolean>; // Properties satisfied
+  state_variables: string[];
+  pbt_variables: string[];
+  branches: Branch[];
+  preconditionals: Literal[];
+  pbt_assertions: PbtAssertion[];
 }

@@ -1,0 +1,9 @@
+{
+  "properties": [
+    { "name": "hasLoadingText", "type": "text", "textToFind": "Loading..." },
+    { "name": "hasDarkModeButton", "type": "text", "textToFind": "Switch to Light Mode" },
+    { "name": "hasLightModeButton", "type": "text", "textToFind": "Switch to Dark Mode" },
+    { "name": "hasUserForm", "type": "id", "id": "user-form" }
+  ],
+  "filePath": "/Users/erikvank/Desktop/cs1710-final/node_server/src/example/example_component.tsx"
+} 
