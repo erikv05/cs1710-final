@@ -1,0 +1,90 @@
+{
+  "result": "success",
+  "data": [
+    {
+      "conditionals": [[ {"isLoading": true}, {"isDarkMode": true}]],
+      "implicaton": [
+        {"hasLoadingText": true},
+        {"hasDarkModeButton": false},
+        {"hasLightModeButton": false}
+      ],
+      "stateTransitions":[
+        [
+            {"isDarkMode": [true, false]}
+        ]
+      ]
+    },
+    {
+      "lhs": { "isLoading": true, "isDarkMode": false },
+      "rhs": {
+        "hasLoadingText": true,
+        "hasDarkModeButton": false,
+        "hasLightModeButton": false
+      }
+    },
+    {
+      "lhs": { "isLoading": false, "isDarkMode": true },
+      "rhs": {
+        "hasLoadingText": false,
+        "hasDarkModeButton": true,
+        "hasLightModeButton": false
+      }
+    },
+    {
+      "lhs": { "isLoading": false, "isDarkMode": false },
+      "rhs": {
+        "hasLoadingText": false,
+        "hasDarkModeButton": false,
+        "hasLightModeButton": true
+      }
+    },
+    {
+      "lhs": { "isLoading": true, "isDarkMode": false },
+      "rhs": {
+        "hasLoadingText": true,
+        "hasDarkModeButton": false,
+        "hasLightModeButton": false
+      }
+    },
+    {
+      "lhs": { "isLoading": false, "isDarkMode": true },
+      "rhs": {
+        "hasLoadingText": false,
+        "hasDarkModeButton": true,
+        "hasLightModeButton": false
+      }
+    },
+    {
+      "lhs": { "isLoading": false, "isDarkMode": false },
+      "rhs": {
+        "hasLoadingText": false,
+        "hasDarkModeButton": false,
+        "hasLightModeButton": true
+      }
+    },
+    {
+      "lhs": { "isLoading": false, "isDarkMode": true },
+      "rhs": {
+        "hasLoadingText": false,
+        "hasDarkModeButton": true,
+        "hasLightModeButton": false
+      }
+    },
+    {
+      "lhs": { "isLoading": false, "isDarkMode": false },
+      "rhs": {
+        "hasLoadingText": false,
+        "hasDarkModeButton": false,
+        "hasLightModeButton": true
+      }
+    },
+    {
+      "lhs": { "isLoading": false, "isDarkMode": false },
+      "rhs": {
+        "hasLoadingText": false,
+        "hasDarkModeButton": false,
+        "hasLightModeButton": true
+      }
+    }
+  ]
+}

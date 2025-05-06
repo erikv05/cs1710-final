@@ -1,0 +1,15 @@
+{
+  "result": "success",
+  "branches": [
+    {
+      "conditionals": [[  ]],
+      "stateTransitions":[
+        [
+            {"isDarkMode": [true, false]}
+        ]
+      ]
+    },
+  ],
+  "pre"
+}
+

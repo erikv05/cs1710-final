@@ -1,0 +1,27 @@
+{
+    "stateVariables": [
+        {"var1": "true"},
+        {"var2": "true"}
+    ],
+    "pbtVariables": [
+        "userDefinedVar1"
+    ],
+    "branches": [
+        {
+            "conditionals": [[{"var1": "t/f"}]],
+            "implications": [
+                {"userDefinedVariable1": "t"}
+            ],
+            "stateTransitions": [
+                {"var1": ["t", "f"]}
+            ]
+        }
+    ],
+    "preconditions": [
+        {"var1": "t"},
+        {"var2": "f"}
+    ],
+    "assertions": [
+        [[{"userDefinedVar1": "t"}, {"var2": "f"}]]
+    ]
+}
