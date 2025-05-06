@@ -29,6 +29,7 @@ export const LiteralSchema = z.object({
 });
 
 export const TextPBTAssertionSchema = PBTAssertionSchema.extend({
+  name: z.string(),
   textToFind: z.string(),
   lhs: z.array(z.array(LiteralSchema)),
   rhs: z.array(z.array(LiteralSchema)),

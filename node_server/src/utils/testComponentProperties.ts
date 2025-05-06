@@ -60,79 +60,18 @@ export function parseReactComponent(
   // Scan entire file for useState hooks to build a mapping of setters to state variables
   const stateSetterMap = extractUseStateHooks(sourceFile);
   
-  for (const ifStmt of ifStatements) {
+  // Only process top-level if statements (not nested in other if-else chains)
+  const topLevelIfStatements = ifStatements.filter(ifStmt => {
+    // Check if this if statement is not contained within another if statement
+    const ancestors = ifStmt.getAncestors();
+    return !ancestors.some(ancestor => Node.isIfStatement(ancestor));
+  });
+  
+  for (const ifStmt of topLevelIfStatements) {
     if (ifStmt.getParent()?.getKind() === SyntaxKind.CaseClause) continue;
     
-    let currentIf: IfStatement | undefined = ifStmt;
-    while (currentIf) {
-      if (Node.isIfStatement(currentIf)) {
-        const cnfConditions = extractConditionsInCNF(currentIf.getExpression());
-        
-        // Collect unique state variables
-        for (const clause of cnfConditions) {
-          for (const condition of clause) {
-            uniqueStateVars.add(condition.stateVar);
-          }
-        }
-        
-        const content = currentIf.getThenStatement().getText();
-        
-        // Convert conditions to CNF format for the Branch
-        const conditionLiterals = cnfConditions.map(clause => 
-          clause.map(cond => ({
-            name: cond.stateVar,
-            assignment: cond.value
-          }))
-        );
-        
-        // Process each property with appropriate handler
-        const implications: Literal[] = [];
-        for (const property of properties) {
-          implications.push({
-            name: property.name,
-            assignment: processAssertion(property, content)
-          });
-        }
-        
-        // Extract state transitions from the rendered component
-        const transitions = extractStateTransitions(content, stateSetterMap);
-        
-        branches.push({
-          conditions: conditionLiterals, 
-          implications,
-          transitions
-        });
-        
-        const elseClause: any = currentIf.getElseStatement();
-        if (elseClause && Node.isIfStatement(elseClause)) {
-          currentIf = elseClause;
-        } else if (elseClause) {
-          const elseContent = elseClause.getText();
-          
-          const elseImplications: Literal[] = [];
-          for (const property of properties) {
-            elseImplications.push({
-              name: property.name,
-              assignment: processAssertion(property, elseContent)
-            });
-          }
-          
-          // Extract state transitions from the else clause
-          const elseTransitions = extractStateTransitions(elseContent, stateSetterMap);
-          
-          branches.push({
-            conditions: [], // Empty conditions for else branch
-            implications: elseImplications,
-            transitions: elseTransitions
-          });
-          currentIf = undefined;
-        } else {
-          currentIf = undefined;
-        }
-      } else {
-        currentIf = undefined;
-      }
-    }
+    // Process the entire if-else-if chain
+    processIfElseChain(ifStmt, stateSetterMap, properties, branches, uniqueStateVars);
   }
   
   // Create PbtAssertions with proper structure
@@ -151,6 +90,111 @@ export function parseReactComponent(
   };
   
   return [result];
+}
+
+// Process an if-else-if chain and add its branches
+function processIfElseChain(
+  ifStmt: IfStatement, 
+  stateSetterMap: Map<string, string>,
+  properties: PBTAssertion[],
+  branches: Branch[],
+  uniqueStateVars: Set<string>
+): void {
+  let currentIf: IfStatement | undefined = ifStmt;
+  
+  while (currentIf) {
+    if (Node.isIfStatement(currentIf)) {
+      const cnfConditions = extractConditionsInCNF(currentIf.getExpression());
+      
+      // Collect unique state variables
+      for (const clause of cnfConditions) {
+        for (const condition of clause) {
+          uniqueStateVars.add(condition.stateVar);
+        }
+      }
+      
+      // Handle the then branch
+      const thenStatement = currentIf.getThenStatement();
+      const thenText = thenStatement.getText();
+      
+      // Extract JSX return statement content
+      const thenJsxContent = extractJsxReturnContent(thenText);
+      
+      // Convert conditions to CNF format for the Branch
+      const conditionLiterals = cnfConditions.map(clause => 
+        clause.map(cond => ({
+          name: cond.stateVar,
+          assignment: cond.value
+        }))
+      );
+      
+      // Process each property with appropriate handler
+      const implications: Literal[] = [];
+      for (const property of properties) {
+        implications.push({
+          name: property.name,
+          assignment: processAssertion(property, thenText)
+        });
+      }
+      
+      // Extract state transitions from the rendered component
+      // Pass both the full content and the JSX content
+      const transitions = extractStateTransitions(thenJsxContent || thenText, stateSetterMap);
+      
+      branches.push({
+        conditions: conditionLiterals, 
+        implications,
+        transitions
+      });
+      
+      const elseStatement: Node | undefined = currentIf.getElseStatement();
+      if (elseStatement && Node.isIfStatement(elseStatement)) {
+        // Continue with the next if in the else-if chain
+        currentIf = elseStatement;
+      } else if (elseStatement) {
+        // Handle the final else clause
+        const elseText = elseStatement.getText();
+        
+        // Extract JSX return statement content
+        const elseJsxContent = extractJsxReturnContent(elseText);
+        
+        // For the else clause, the conditions are the negation of all conditions in the chain
+        // For simplicity, we represent it as an empty conditions array
+        const elseImplications: Literal[] = [];
+        for (const property of properties) {
+          elseImplications.push({
+            name: property.name,
+            assignment: processAssertion(property, elseText)
+          });
+        }
+        
+        // Extract state transitions from the else clause
+        const elseTransitions = extractStateTransitions(elseJsxContent || elseText, stateSetterMap);
+        
+        branches.push({
+          conditions: [], // Empty conditions for else branch
+          implications: elseImplications,
+          transitions: elseTransitions
+        });
+        
+        // End the chain after processing the else clause
+        currentIf = undefined;
+      } else {
+        // No else clause, end the chain
+        currentIf = undefined;
+      }
+    } else {
+      currentIf = undefined;
+    }
+  }
+}
+
+// Helper to extract JSX from return statements
+function extractJsxReturnContent(text: string): string | null {
+  // Pattern to match return (<JSX>...</JSX>);
+  const returnRegex = /return\s*\(\s*([\s\S]*?)\s*\);/;
+  const match = text.match(returnRegex);
+  return match ? match[1] : null;
 }
 
 // Extract useState hooks and create a mapping of setter functions to their state variables
@@ -189,49 +233,88 @@ function extractUseStateHooks(sourceFile: Node): Map<string, string> {
 // Extract state transitions from component content
 function extractStateTransitions(content: string, stateSetterMap: Map<string, string>): Transition[] {
   const transitions: Transition[] = [];
-  const transitionMap = new Map<string, boolean[]>();
+  const processed = new Set<string>(); // Track processed state variables to avoid duplicates
+  
+  // Need access to full component - find the root source file
+  // We assume the content is from a React component
+  const fullComponentContent = content;
   
   // For each setter function in our map
   for (const [setter, stateVar] of stateSetterMap.entries()) {
-    // Simple pattern matching for setter calls like setSomething(true)
-    const trueRegex = new RegExp(`${setter}\\(\\s*true\\s*\\)`, 'g');
-    const falseRegex = new RegExp(`${setter}\\(\\s*false\\s*\\)`, 'g');
+    // Skip if we've already processed this state variable
+    if (processed.has(stateVar)) continue;
     
-    // Initialize transition entry if it doesn't exist
-    if (!transitionMap.has(stateVar)) {
-      transitionMap.set(stateVar, []);
+    // Track potential assignments
+    const assignments: boolean[] = [];
+    
+    // Look for direct onClick handlers with setter
+    if (content.includes(`onClick={() => ${setter}(false)`) ||
+        content.includes(`onClick={()=>${setter}(false)`) ||
+        content.includes(`onClick={ () => ${setter}(false)`) ||
+        content.includes(`onClick={ ()=>${setter}(false)`)) {
+      assignments.push(false);
     }
     
-    // Check for true assignments
-    if (trueRegex.test(content) && !transitionMap.get(stateVar)?.includes(true)) {
-      transitionMap.get(stateVar)?.push(true);
+    if (content.includes(`onClick={() => ${setter}(true)`) ||
+        content.includes(`onClick={()=>${setter}(true)`) ||
+        content.includes(`onClick={ () => ${setter}(true)`) ||
+        content.includes(`onClick={ ()=>${setter}(true)`)) {
+      assignments.push(true);
     }
     
-    // Check for false assignments
-    if (falseRegex.test(content) && !transitionMap.get(stateVar)?.includes(false)) {
-      transitionMap.get(stateVar)?.push(false);
-    }
-    
-    // Check for toggle pattern like setIsLoading(!isLoading)
-    const toggleRegex = new RegExp(`${setter}\\(\\s*!\\s*${stateVar}\\s*\\)`, 'g');
-    if (toggleRegex.test(content)) {
-      // For toggles, we add both possibilities since this is a state transition analysis
-      if (!transitionMap.get(stateVar)?.includes(true)) {
-        transitionMap.get(stateVar)?.push(true);
+    // Look for function references in onClick handlers
+    const onClickRegex = /onClick=\{([^}]+)\}/g;
+    let match;
+    while ((match = onClickRegex.exec(content)) !== null) {
+      const functionName = match[1].trim();
+      
+      // Skip arrow functions
+      if (functionName.includes('=>')) continue;
+      
+      // Check if there's a function definition with this name
+      const funcDefRegex = new RegExp(`const\\s+${functionName}\\s*=\\s*\\(.*?\\)\\s*=>\\s*\\{([\\s\\S]*?)\\};`);
+      const funcMatch = fullComponentContent.match(funcDefRegex);
+      
+      if (funcMatch && funcMatch[1]) {
+        const funcBody = funcMatch[1];
+        
+        // Check if the function uses this setter
+        if (funcBody.includes(setter)) {
+          if (funcBody.includes(`${setter}(true)`) || 
+              funcBody.includes(`${setter}(true);`)) {
+            assignments.push(true);
+          }
+          else if (funcBody.includes(`${setter}(false)`) || 
+                  funcBody.includes(`${setter}(false);`)) {
+            assignments.push(false);
+          }
+          else if (funcBody.includes(`${setter}(prevMode =>`) || 
+                  funcBody.includes(`${setter}(prev =>`) ||
+                  funcBody.includes(`${setter}(!`) ||
+                  funcBody.includes(`!prevMode`) ||
+                  funcBody.includes(`!prev`)) {
+            // Toggle pattern - include both possible values
+            if (!assignments.includes(true)) assignments.push(true);
+            if (!assignments.includes(false)) assignments.push(false);
+          }
+          else {
+            // Function uses setter but we can't determine how, include both
+            if (!assignments.includes(true)) assignments.push(true);
+            if (!assignments.includes(false)) assignments.push(false);
+          }
+        }
       }
-      if (!transitionMap.get(stateVar)?.includes(false)) {
-        transitionMap.get(stateVar)?.push(false);
-      }
     }
-  }
-  
-  // Convert the map to Transition objects
-  for (const [name, assignments] of transitionMap.entries()) {
+    
+    // If we found assignments for this state variable, add a transition
     if (assignments.length > 0) {
       transitions.push({
-        name,
+        name: stateVar,
         assignments
       });
+      
+      // Mark as processed
+      processed.add(stateVar);
     }
   }
   
@@ -292,9 +375,137 @@ function extractConditions(expression: Node): Condition[] {
   return cnfConditions.flatMap(clause => clause);
 }
 
+// Extract transitions by analyzing the entire component file
+export function scanComponentTransitions(filePath: string): { [branch: number]: Transition[] } {
+  const fs = require('fs');
+  const path = require('path');
+  
+  // Read the component file
+  const content = fs.readFileSync(filePath, 'utf8');
+  
+  // Find state variables and their setters
+  const stateSetterMap = new Map<string, string>();
+  
+  // Extract useState declarations
+  const useStateRegex = /const\s+\[\s*(\w+)\s*,\s*(\w+)\s*\]\s*=\s*useState/g;
+  let match;
+  
+  while ((match = useStateRegex.exec(content)) !== null) {
+    const stateVar = match[1];
+    const setter = match[2];
+    stateSetterMap.set(setter, stateVar);
+  }
+  
+  // Find all JSX return statements
+  const returnRegex = /return\s*\(\s*([\s\S]*?)\s*\);/g;
+  let branchIndex = 0;
+  const branchTransitions: { [branch: number]: Transition[] } = {};
+  
+  while ((match = returnRegex.exec(content)) !== null) {
+    branchIndex++;
+    const jsxContent = match[1];
+    const transitions: Transition[] = [];
+    
+    // Check for each state setter
+    for (const [setter, stateVar] of stateSetterMap.entries()) {
+      // Track potential assignments
+      const assignments: boolean[] = [];
+      
+      // Check for onClick handlers with direct setter calls
+      if (jsxContent.includes(`onClick={() => ${setter}(false)`) ||
+          jsxContent.includes(`onClick={()=>${setter}(false)`) ||
+          jsxContent.includes(`onClick={ () => ${setter}(false)`) ||
+          jsxContent.includes(`onClick={ ()=>${setter}(false)`)) {
+        assignments.push(false);
+      }
+      
+      if (jsxContent.includes(`onClick={() => ${setter}(true)`) ||
+          jsxContent.includes(`onClick={()=>${setter}(true)`) ||
+          jsxContent.includes(`onClick={ () => ${setter}(true)`) ||
+          jsxContent.includes(`onClick={ ()=>${setter}(true)`)) {
+        assignments.push(true);
+      }
+      
+      // Check for function references in onClick handlers
+      const onClickRegex = /onClick=\{([^}]+)\}/g;
+      let functionMatch;
+      
+      while ((functionMatch = onClickRegex.exec(jsxContent)) !== null) {
+        const functionName = functionMatch[1].trim();
+        
+        // Skip arrow functions
+        if (functionName.includes('=>')) continue;
+        
+        // Find function definition
+        const funcDefRegex = new RegExp(`const\\s+${functionName}\\s*=\\s*\\(.*?\\)\\s*=>\\s*\\{([\\s\\S]*?)\\};`);
+        const funcMatch = content.match(funcDefRegex);
+        
+        if (funcMatch && funcMatch[1]) {
+          const funcBody = funcMatch[1];
+          
+          // Check if function uses this setter
+          if (funcBody.includes(setter)) {
+            if (funcBody.includes(`${setter}(true)`) || 
+                funcBody.includes(`${setter}(true);`)) {
+              assignments.push(true);
+            }
+            else if (funcBody.includes(`${setter}(false)`) || 
+                    funcBody.includes(`${setter}(false);`)) {
+              assignments.push(false);
+            }
+            else if (funcBody.includes(`${setter}(prevMode =>`) || 
+                    funcBody.includes(`${setter}(prev =>`) ||
+                    funcBody.includes(`${setter}(!`) ||
+                    funcBody.includes(`!prevMode`) ||
+                    funcBody.includes(`!prev`)) {
+              // Toggle pattern - include both possible values
+              if (!assignments.includes(true)) assignments.push(true);
+              if (!assignments.includes(false)) assignments.push(false);
+            }
+            else {
+              // Function uses setter but we can't determine how, include both
+              if (!assignments.includes(true)) assignments.push(true);
+              if (!assignments.includes(false)) assignments.push(false);
+            }
+          }
+        }
+      }
+      
+      // Add transition if we found assignments
+      if (assignments.length > 0) {
+        transitions.push({
+          name: stateVar,
+          assignments
+        });
+      }
+    }
+    
+    branchTransitions[branchIndex] = transitions;
+  }
+  
+  return branchTransitions;
+}
+
+// Add this to the export function to update the branches with transitions
 export function testComponentProperties(
   filePath: string, 
   properties: PBTAssertion[]
 ): PropertyTestResult[] {
-  return parseReactComponent(filePath, properties);
+  const results = parseReactComponent(filePath, properties);
+  
+  // Scan for transitions directly
+  const branchTransitions = scanComponentTransitions(filePath);
+  
+  // Update each branch with its transitions
+  let branchIndex = 0;
+  results.forEach(result => {
+    result.branches.forEach(branch => {
+      branchIndex++;
+      if (branchTransitions[branchIndex] && branchTransitions[branchIndex].length > 0) {
+        branch.transitions = branchTransitions[branchIndex];
+      }
+    });
+  });
+  
+  return results;
 }

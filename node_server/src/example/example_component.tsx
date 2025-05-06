@@ -42,7 +42,7 @@ const ExampleComponent: React.FC<ExampleComponentProps> = ({ initialDarkMode = f
                 <div className="content">
                     <h2>Example Component</h2>
                     <p>This component has loaded successfully.</p>
-                    <button onClick={toggleDarkMode}>
+                    <button onClick={() => setIsDarkMode(false)}>
                         Switch to Light Mode
                     </button>
                 </div>

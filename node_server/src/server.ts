@@ -28,16 +28,13 @@ curl -X POST http://localhost:3000/   -H "Content-Type: application/json"   -d '
 app.post('/', (req, res) => {
     const parseResult = NodeAPIRequestSchema.safeParse(req.body);
     if (!parseResult.success) {
-        res.status(400).send('Invalid request body: properties must be a PBTAssertion array');
-        return;
-    } else if (typeof req.body.filePath !== 'string') {
-        res.status(400).send('Invalid request body: filePath must be a string');
+        res.status(400).send('Invalid request body: properties must be a NodeAPIRequestSchema object');
         return;
     }
 
     // We know this works b/c the above didn't fail
     const textAssertions: TextPBTAssertion[] = req.body.textAssertions;
-    const filePath: string = req.body.filePath;
+    const filePath: string = req.body.filepath;
 
     let results: PropertyTestResult[] = [];
 
