@@ -1,12 +1,10 @@
 {
   "result": "success",
-  "data": [
+  "requestToSolver": [
     {
       "state_variables": ["isLoading", "isDarkMode"],
       "pbt_variables": [
-        "hasLoadingText",
-        "hasDarkModeButton",
-        "hasLightModeButton"
+        "hasDarkModeButton"
       ],
       "branches": [
         {
@@ -15,9 +13,7 @@
             [{ "name": "isDarkMode", "assignment": true }]
           ],
           "implications": [
-            { "name": "hasLoadingText", "assignment": true },
-            { "name": "hasDarkModeButton", "assignment": false },
-            { "name": "hasLightModeButton", "assignment": false }
+            { "name": "hasDarkModeButton", "assignment": false }
           ],
           "transitions": []
         },
@@ -27,9 +23,7 @@
             [{ "name": "isDarkMode", "assignment": false }]
           ],
           "implications": [
-            { "name": "hasLoadingText", "assignment": true },
-            { "name": "hasDarkModeButton", "assignment": false },
-            { "name": "hasLightModeButton", "assignment": false }
+            { "name": "hasDarkModeButton", "assignment": false }
           ],
           "transitions": []
         },
@@ -39,9 +33,7 @@
             [{ "name": "isDarkMode", "assignment": true }]
           ],
           "implications": [
-            { "name": "hasLoadingText", "assignment": false },
-            { "name": "hasDarkModeButton", "assignment": true },
-            { "name": "hasLightModeButton", "assignment": false }
+            { "name": "hasDarkModeButton", "assignment": true }
           ],
           "transitions": [{ "name": "isDarkMode", "assignments": [false] }]
         },
@@ -51,30 +43,35 @@
             [{ "name": "isDarkMode", "assignment": false }]
           ],
           "implications": [
-            { "name": "hasLoadingText", "assignment": false },
-            { "name": "hasDarkModeButton", "assignment": false },
-            { "name": "hasLightModeButton", "assignment": true }
+            { "name": "hasDarkModeButton", "assignment": false }
           ],
           "transitions": [
             { "name": "isDarkMode", "assignments": [true, false] }
           ]
         }
       ],
-      "preconditionals": [[{ "name": "isLoading", "assignment": true }]],
+      "preconditionals": [[{ "name": "isLoading", "assignment": false }]],
       "pbt_assertions": [
         {
-          "name": "hasLoadingText",
-          "cnf": [[{ "name": "hasLoadingText", "assignment": true }]]
-        },
-        {
           "name": "hasDarkModeButton",
-          "cnf": [[{ "name": "hasLightMode", "assignment": true }]]
-        },
-        {
-          "name": "hasLightModeButton",
-          "cnf": [[{ "name": "hasLightMode", "assignment": false }]]
+          "cnf": [[{ "name": "hasDarkModeButton", "assignment": true }]]
         }
       ]
     }
-  ]
+  ],
+  "exampleResponseFromSolver": {
+    "result": "failed",
+    "violated_pbt": "hasDarkModeButton",
+    "states": [
+      {"isLoading": true, "isDarkMode": false}
+    ]
+  },
+  "anotherValidExampleResponseFromSolver": {
+    "result": "failed",
+    "violated_pbt": "hasDarkModeButton",
+    "states": [
+      {"isLoading": false, "isDarkMode": false},
+      {"isLoading": false, "isDarkMode": true}
+    ]
+  }
 }
