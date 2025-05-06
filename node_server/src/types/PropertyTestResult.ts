@@ -6,6 +6,6 @@ export interface PropertyTestResult {
   state_variables: string[];
   pbt_variables: string[];
   branches: Branch[];
-  preconditionals: Literal[];
+  preconditionals: Literal[][];
   pbt_assertions: PbtAssertion[];
 }

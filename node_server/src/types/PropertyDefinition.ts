@@ -11,7 +11,7 @@ export interface PBTAssertion {
   rhs: Literal[][];
 }
 
-const PropertyDefinitionSchema = z.object({
+const PBTAssertionSchema = z.object({
   name: z.string(),
 })
 
@@ -28,8 +28,13 @@ export const LiteralSchema = z.object({
   assignment: z.boolean(),
 });
 
-export const TextPropertyDefinitionSchema = PropertyDefinitionSchema.extend({
+export const TextPBTAssertionSchema = PBTAssertionSchema.extend({
   textToFind: z.string(),
   lhs: z.array(z.array(LiteralSchema)),
   rhs: z.array(z.array(LiteralSchema)),
 });
+
+export const NodeAPIRequestSchema = z.object({
+  filepath: z.string(),
+  textAssertions: z.array(TextPBTAssertionSchema),
+})

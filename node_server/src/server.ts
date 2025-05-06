@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { TextPropertyDefinition, TextPropertyDefinitionSchema } from './types/PropertyDefinition';
+import { NodeAPIRequestSchema, PBTAssertion, TextPBTAssertion } from './types/PropertyDefinition';
 import { testComponentProperties } from './utils/testComponentProperties';
 import { PropertyTestResult } from './types/PropertyTestResult';
 
@@ -26,9 +26,9 @@ curl -X POST http://localhost:3000/   -H "Content-Type: application/json"   -d '
 */
 
 app.post('/', (req, res) => {
-    const parseResult = TextPropertyDefinitionSchema.array().safeParse(req.body.properties);
+    const parseResult = NodeAPIRequestSchema.safeParse(req.body);
     if (!parseResult.success) {
-        res.status(400).send('Invalid request body: properties must be a TextPropertyDefinition array');
+        res.status(400).send('Invalid request body: properties must be a PBTAssertion array');
         return;
     } else if (typeof req.body.filePath !== 'string') {
         res.status(400).send('Invalid request body: filePath must be a string');
@@ -36,13 +36,13 @@ app.post('/', (req, res) => {
     }
 
     // We know this works b/c the above didn't fail
-    const properties: TextPropertyDefinition[] = req.body.properties;
+    const textAssertions: TextPBTAssertion[] = req.body.textAssertions;
     const filePath: string = req.body.filePath;
 
     let results: PropertyTestResult[] = [];
 
     try {
-        results = testComponentProperties(filePath, properties);
+        results = testComponentProperties(filePath, textAssertions);
     } catch (error: any) {
         res.status(500).send('Error processing the file: ' + error.message);
         return;

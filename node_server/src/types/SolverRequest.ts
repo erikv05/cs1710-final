@@ -3,10 +3,15 @@ export interface Literal {
   assignment: boolean;
 }
 
+export interface Transition {
+  name: string;
+  assignments: boolean[];
+}
+
 export interface Branch {
   conditions: Literal[][];  // CNF criteria for being in this branch
   implications: Literal[];  // Resulting rendered state
-  transitions: Literal[];   // State variable transitions
+  transitions: Transition[];   // State variable transitions
 }
 
 export interface PbtAssertion {
@@ -19,5 +24,5 @@ export interface SolverRequest {
   pbt_variables: string[];
   branches: Branch[];
   preconditionals: Literal[];
-  pbt_assertions: PbtAssertion[];
+  pbt_assertions: PbtAssertion;
 } 
