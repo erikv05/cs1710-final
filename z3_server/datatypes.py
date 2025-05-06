@@ -10,18 +10,18 @@ class PbtAssertion:
 class Branch(BaseModel):
     conditions: list[list[Literal]] #CNF criteria for being in this branch
     implications: list[Literal] #resulting rendered state
-    transitions: list[Literal] #NOTE: here, the assignment type is used to indicate type of transition.
+    transitions: list[str] #NOTE: here, the assignment type is used to indicate type of transition.
                                # True indicates a false->true tranition, False indicates a True->false transition
 
 class SolverRequest(BaseModel):
     state_variables: list[str]
     pbt_variables: list[str]
     branches: list[Branch]
-    preconditionals: list[Literal]
+    preconditionals: list[list[Literal]]
     pbt_assertions: list[PbtAssertion]
 
 class SolverResponse(BaseModel):
-    states: list[list[Literal]]
+    states: list[list[Literal]] #state trace, not a cnf
     violated_pbt: Literal
 
 
