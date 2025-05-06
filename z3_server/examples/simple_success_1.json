@@ -1,0 +1,27 @@
+{
+    "state_variables": ["a", "b"],
+    "pbt_variables": ["c", "d"],
+    "state_transitions": [
+        {
+            "name" : "transition 1",
+            "lhs" : [
+                [{"name": "a", "assignment": false}]
+            ],
+            "rhs" :[
+                [{"name":"c", "assignment": true}]
+            ]
+        }
+    ],
+    "pbt_assertions":[
+        {
+            "name" : "assertion 1",
+            "lhs" : [
+                [{"name": "a", "assignment": false}]
+            ],
+            "rhs" :[
+                [{"name":"c", "assignment": true}]
+            ]
+        }
+
+    ]
+}
