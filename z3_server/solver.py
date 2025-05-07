@@ -92,11 +92,12 @@ class PageTransitionSolver():
 
     def CheckTransition(self, transition: Transition, pre: int, post: int)  -> BoolRef:
         return And(    
-            Or([ # the given transition is taken
-                #TODO: add "DO NOTHING" option
-                self.CheckLit(Literal(name=transition.name, assignment=end_bool), post)
-                for end_bool in transition.assignments
-            ]),
+            Or(Or([ # the given transition is taken
+                    self.CheckLit(Literal(name=transition.name, assignment=end_bool), post)
+                    for end_bool in transition.assignments
+                ]),
+                self.trace[pre][transition.name] == self.trace[post][transition.name] #"Do nothing" option
+            ),
             And([ # no other variable changes
                 self.trace[pre][var] == self.trace[post][var]
                 for var in 
