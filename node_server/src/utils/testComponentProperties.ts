@@ -58,7 +58,7 @@ class LabelAssertionHandler implements AssertionHandler {
     const labelAssertion = assertion as LabelPBTAssertion;
     const labelToFind = labelAssertion.labelToFind;
     
-    // Check for various forms of accessibility attributes
+    // Check for various forms of essibility attributes
     return content.includes(`aria-label="${labelToFind}"`) || 
            content.includes(`aria-label='${labelToFind}'`) ||
            content.includes(`aria-labelledby="${labelToFind}"`) ||
