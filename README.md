@@ -1,6 +1,6 @@
 # PBT for Stateful React
 
-## Authors
+## Authors (alphabetically by last name)
 
 Henry Earnest, Milo Kron, Erik Vank
 
@@ -10,7 +10,21 @@ Many real-world systems (such as web applications and databases) use some notion
 
 ## Design Tradeoffs
 
-We wanted to make the design extensible while also limiting the scope adequately. 
+We wanted to make the design extensible while also limiting the scope adequately. Conforming to this requirement, the back-end is largely written in a way that would support additional operations in the future. For example, the rhs of PBT assertions are written in CNF even though they only support one literal as of now. Additionally, state transitions sent to the Z3 server contain an array of possible states, which would expand to types like strings and integers.
+
+## Scope Assumptions
+
+Limitations are listed under the "Node Backend" section. These limitations mostly cover the limitations of the frontend and the Z3 server as well.
+
+## Goals
+
+Generally, our goals stayed pretty consistent with our proposal. We didn't have time for a super pretty visualization, but achieved something close to Sterling in Forge. We also didn't have time for any real SMT functionality, but this was not an explicit goal either.
+
+We were, however, able to make the project much more extensible as a whole than initially anticipated.
+
+## Understanding the Model
+
+Successful tests represent an instance where the Z3 solver was not able to find a satisfying assignment such that any one of the rhs of the PBT assertions were violated. Unsuccessful tests represent the opposite (i.e., an assignment that violates the PBT assertions). When state transitions are turned off, all the states in the visualization for failing tests will be the same (as they are internally represented with an empty array for transitions). When state transitions are turned on, each individual state is listed with an index at the beginning. All next states will represent either exactly one state transition or a noop.
 
 # Components
 
