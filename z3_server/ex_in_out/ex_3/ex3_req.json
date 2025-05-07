@@ -15,7 +15,7 @@
         [{ "name": "isLoading", "assignment": true }],
         [{ "name": "isDarkMode", "assignment": false }]
       ],
-      "implications": [{ "name": "hasLoadingTest", "assignment": true }],
+      "implications": [{ "name": "hasLoadingText", "assignment": true }],
       "transitions": []
     },
     {
@@ -31,12 +31,12 @@
         [{ "name": "isLoading", "assignment": false }],
         [{ "name": "isDarkMode", "assignment": false }]
       ],
-      "implications": [{ "name": "hasLoadingTest", "assignment": true }],
+      "implications": [{ "name": "hasLoadingText", "assignment": true }],
       "transitions": []
     }
   ],
   "preconditionals": [[{ "name": "isLoading", "assignment": false }]],
-  "pbt_assertions": {
+  "pbt_assertion": {
     "name": "hasLoadingText",
     "cnf": [[{ "name": "hasLoadingText", "assignment": false }]]
   }

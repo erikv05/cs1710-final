@@ -11,10 +11,6 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 
-@app.post("/items/")
-async def create_item(item: TestItem):
-    print(item.description)
-    return item.price * item.tax
 
 @app.post("/testlit/")
 def read_item(lit: Literal):
@@ -22,15 +18,10 @@ def read_item(lit: Literal):
     print(lit.assignment)
     return {"item_id": 1, "q": "blah"}
 
-@app.post("/testNamedImp/")
-def read_item(imp: NamedImplication):
-    print(imp.name)
-    print(imp.lhs)
-    print(imp.lhs[0][0])
-    return {"item_id": 1, "q": "blah"}
+
 
 @app.post("/solve/")
-def read_item(req: SolverRequest) -> list[SolverResponseEntry]:
+def read_item(req: SolverRequest) -> SolverResponse:
     return solveReq(req)
 
 if __name__ == "__main__":
