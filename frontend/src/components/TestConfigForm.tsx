@@ -17,11 +17,14 @@ import {
   Snackbar,
   CircularProgress,
   alpha,
-  Divider
+  Divider,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import { Add, Delete, PlayArrow, Info } from '@mui/icons-material';
 import axios from 'axios';
 import type { PropertyTestResult } from '../types/PropertyTestResult';
+import type { Z3Response } from '../types/Z3Response';
 
 interface Assertion {
   name: string;
@@ -31,19 +34,139 @@ interface Assertion {
   expected?: string;
 }
 
-interface ServerResult {
-  assertion?: {
-    name?: string;
-    textToFind?: string;
-  };
-  name?: string;
-  textToFind?: string;
-  success?: boolean;
-  errorMessage?: string;
-}
-
 interface TestConfigFormProps {
   setResults: (results: PropertyTestResult[] | null) => void;
+}
+
+interface Literal {
+  name: string;
+  assignment: boolean;
+}
+
+// Parse condition string into CNF format
+function parseConditionToCNF(condition: string): Literal[][] {
+  if (!condition.trim()) {
+    // Default to "true" if condition is empty
+    return [[{ name: 'default', assignment: true }]];
+  }
+
+  // Remove all spaces for easier parsing
+  const cleanCondition = condition.replace(/\s+/g, '');
+  
+  // Helper function to process a single clause (may contain parentheses)
+  function processClause(clause: string): Literal[] {
+    // Find all parenthesized expressions
+    let processedClause = clause;
+    const parenRegex = /\(([^()]+)\)/g;
+    let match;
+    
+    // Replace all parenthesized expressions with their processed results
+    while ((match = parenRegex.exec(clause)) !== null) {
+      const innerExpression = match[1];
+      
+      // Replace the entire parenthesized expression with the processed result
+      processedClause = processedClause.replace(`(${innerExpression})`, innerExpression);
+    }
+    
+    // At this point, we should have no parentheses, just AND terms
+    const andTerms = processedClause.split('&');
+    
+    return andTerms.map(term => {
+      term = term.trim();
+      // Check if term is negated
+      if (term.startsWith('!')) {
+        return { name: term.substring(1), assignment: false };
+      }
+      return { name: term, assignment: true };
+    });
+  }
+  
+  // Split the expression by OR operators
+  // First, let's handle any top-level parenthesized expressions
+  let normalizedExpression = cleanCondition;
+  
+  // Replace all parenthesized expressions with a standardized format
+  const parenthesizedExpressions: string[] = [];
+  let nestedLevel = 0;
+  let currentExpr = '';
+  
+  for (let i = 0; i < normalizedExpression.length; i++) {
+    const char = normalizedExpression[i];
+    
+    if (char === '(') {
+      nestedLevel++;
+      if (nestedLevel === 1) {
+        // Start of a top-level parenthesized expression
+        currentExpr = '';
+      } else {
+        // Nested parenthesis, include it in current expression
+        currentExpr += char;
+      }
+    } 
+    else if (char === ')') {
+      nestedLevel--;
+      if (nestedLevel === 0) {
+        // End of a top-level parenthesized expression
+        parenthesizedExpressions.push(currentExpr);
+        normalizedExpression = normalizedExpression.replace(
+          `(${currentExpr})`, 
+          `__EXPR${parenthesizedExpressions.length - 1}__`
+        );
+        // Adjust index to account for replacement
+        i = i - currentExpr.length - 2 + `__EXPR${parenthesizedExpressions.length - 1}__`.length;
+      } else {
+        // Nested parenthesis, include it in current expression
+        currentExpr += char;
+      }
+    }
+    else if (nestedLevel > 0) {
+      // Inside parentheses, add to current expression
+      currentExpr += char;
+    }
+  }
+  
+  // Now we can safely split by OR operator without worrying about parentheses
+  const orClauses = normalizedExpression.split('|');
+  
+  return orClauses.map(orClause => {
+    // Replace any expression placeholders with their actual expressions
+    let processedClause = orClause;
+    const exprRegex = /__EXPR(\d+)__/g;
+    let exprMatch;
+    
+    while ((exprMatch = exprRegex.exec(orClause)) !== null) {
+      const exprIndex = parseInt(exprMatch[1]);
+      const innerExpression = parenthesizedExpressions[exprIndex];
+      processedClause = processedClause.replace(
+        `__EXPR${exprIndex}__`, 
+        innerExpression
+      );
+    }
+    
+    // Process the clause (handles ANDs within it)
+    return processClause(processedClause);
+  });
+}
+
+// Parse expected string into CNF format
+function parseExpectedToCNF(expected: string): Literal[][] {
+  if (!expected.trim()) {
+    // Default to "true" if expected is empty
+    return [[{ name: 'result', assignment: true }]];
+  }
+
+  const cleanExpected = expected.trim();
+  let literal: Literal;
+
+  // Check if the expected value is negated
+  if (cleanExpected.startsWith('!')) {
+    literal = { name: cleanExpected.substring(1), assignment: false };
+  } else {
+    literal = { name: cleanExpected, assignment: true };
+  }
+
+  // Wrap in CNF structure (double array)
+  return [[literal]];
 }
 
 const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
@@ -52,6 +175,7 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
   const [error, setError] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [useStatefulTesting, setUseStatefulTesting] = useState(true);
 
   const handleAddAssertion = () => {
     setAssertions([
@@ -115,13 +239,17 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
       // Parse each condition and expected fields to create the required CNF format
       const payload = {
         filepath,
+        useStatefulTesting,
         textAssertions: assertions.map(assertion => {
-          const lhs = [[{ name: 'default', assignment: true }]];
-          const rhs = [[{ name: 'result', assignment: true }]];
+          // Parse the condition string to CNF format
+          const lhs = assertion.condition ? 
+            parseConditionToCNF(assertion.condition) : 
+            [[{ name: 'default', assignment: true }]];
           
-          // This is a simplified version for the demo
-          // In a real implementation, we would parse the condition and expected strings
-          // to create proper CNF structures
+          // Parse the expected string to CNF format
+          const rhs = assertion.expected ? 
+            parseExpectedToCNF(assertion.expected) : 
+            [[{ name: 'result', assignment: true }]];
           
           return {
             name: assertion.name,
@@ -132,21 +260,35 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
         })
       };
       
+      console.log("Sending payload to server:", JSON.stringify(payload, null, 2));
+      
       const response = await axios.post('http://localhost:3000/', payload);
       console.log("Server response:", response.data);
       
       // Ensure data has the correct format
-      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+      if (response.data && response.data.results && Array.isArray(response.data.results)) {
         // Transform the data to match our PropertyTestResult interface
-        const formattedResults = response.data.data.map((result: ServerResult) => {
+        const formattedResults = response.data.results.map((result: Z3Response | { error: string }, index: number) => {
+          const assertionInfo = {
+            name: assertions[index].name,
+            type: "TextPBTAssertion",
+            textToFind: assertions[index].textToFind
+          };
+
+          if ('error' in result) {
+            return {
+              assertion: assertionInfo,
+              success: false,
+              errorMessage: result.error,
+              z3Result: null
+            };
+          }
+
           return {
-            assertion: {
-              name: result.assertion?.name || result.name || "Unnamed Test",
-              type: "TextPBTAssertion",
-              textToFind: result.assertion?.textToFind || result.textToFind
-            },
-            success: result.success !== undefined ? result.success : false,
-            errorMessage: result.errorMessage
+            assertion: assertionInfo,
+            success: result.result === 'passed',
+            errorMessage: result.result === 'failed' ? `Failed: ${result.violated_pbt}` : undefined,
+            z3Result: result
           };
         });
         
@@ -243,6 +385,18 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
           Enter the absolute path to the React component you want to test
         </FormHelperText>
       </Box>
+
+      <FormControlLabel
+        control={
+          <Switch
+            checked={useStatefulTesting}
+            onChange={(e) => setUseStatefulTesting(e.target.checked)}
+            color="primary"
+          />
+        }
+        label="Use Stateful Testing"
+        sx={{ mb: 3 }}
+      />
 
       {assertions.length === 0 ? (
         <Box 

@@ -38,4 +38,5 @@ export const TextPBTAssertionSchema = PBTAssertionSchema.extend({
 export const NodeAPIRequestSchema = z.object({
   filepath: z.string(),
   textAssertions: z.array(TextPBTAssertionSchema),
+  useStatefulTesting: z.boolean().optional(),
 })

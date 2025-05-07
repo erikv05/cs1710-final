@@ -7,7 +7,9 @@ import {
   Button,
   Chip,
   CircularProgress,
-  alpha
+  alpha,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import type { PropertyTestResult } from '../types/PropertyTestResult';
 import type { Z3Response } from '../types/Z3Response';
@@ -26,6 +28,7 @@ const ExampleTest = ({ setResults }: ExampleTestProps) => {
   const [filepath, setFilepath] = useState('/Users/erikvank/Desktop/cs1710-final/node_server/src/example/example_component.tsx');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [useStatefulTesting, setUseStatefulTesting] = useState(true);
 
   const runExampleTest = async () => {
     setLoading(true);
@@ -33,6 +36,7 @@ const ExampleTest = ({ setResults }: ExampleTestProps) => {
     try {
       const response = await axios.post<ServerResponse>('http://localhost:3000/', {
         filepath,
+        useStatefulTesting,
         textAssertions: [
           {
             name: 'Has Loading Text',
@@ -177,6 +181,18 @@ const ExampleTest = ({ setResults }: ExampleTestProps) => {
         InputProps={{
           sx: { fontFamily: 'monospace', fontSize: '0.9rem' }
         }}
+      />
+
+      <FormControlLabel
+        control={
+          <Switch
+            checked={useStatefulTesting}
+            onChange={(e) => setUseStatefulTesting(e.target.checked)}
+            color="primary"
+          />
+        }
+        label="Use Stateful Testing"
+        sx={{ mb: 3 }}
       />
 
       <Typography 

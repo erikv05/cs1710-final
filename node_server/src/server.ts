@@ -21,9 +21,12 @@ app.post('/', async (req, res) => {
     // We know this works b/c the above didn't fail
     const textAssertions: TextPBTAssertion[] = req.body.textAssertions;
     const filePath: string = req.body.filepath;
+    // Extract the useStatefulTesting flag (defaults to true for backward compatibility)
+    const useStatefulTesting: boolean = req.body.useStatefulTesting !== false;
 
     console.log("Received text assertions:", textAssertions);
     console.log("Number of assertions: ", textAssertions.length)
+    console.log("Use Stateful Testing: ", useStatefulTesting)
 
     let result: ReactParseResult;
 
@@ -39,10 +42,18 @@ app.post('/', async (req, res) => {
     let tests: SolverRequest[] = [];
 
     for (let i = 0; i < result.assertions.length; i++) {
+        // Create a copy of the branches to modify if not using stateful testing
+        const branches = useStatefulTesting 
+            ? result.branches 
+            : result.branches.map(branch => ({
+                ...branch,
+                transitions: [] // Empty the transitions array when stateful testing is disabled
+            }));
+
         const test = {
             state_variables: result.state_variables,
             pbt_variables: result.pbt_variables,
-            branches: result.branches,
+            branches: branches,
             preconditionals: result.assertions[i].preconditionals,
             pbt_assertion: result.assertions[i].pbt_assertions
         };
