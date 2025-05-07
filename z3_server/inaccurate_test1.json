@@ -1,6 +1,11 @@
 {
-  "state_variables": ["isLoading", "isDarkMode"],
-  "pbt_variables": ["hasLoadingText"],
+  "state_variables": [
+    "isLoading",
+    "isDarkMode"
+  ],
+  "pbt_variables": [
+    "hasLoadingText"
+  ],
   "branches": [
     {
       "conditions": [
@@ -72,7 +77,9 @@
       "transitions": [
         {
           "name": "isDarkMode",
-          "assignments": [false]
+          "assignments": [
+            false
+          ]
         }
       ]
     },
@@ -100,7 +107,10 @@
       "transitions": [
         {
           "name": "isDarkMode",
-          "assignments": [true, false]
+          "assignments": [
+            true,
+            false
+          ]
         }
       ]
     }
@@ -119,7 +129,7 @@
       [
         {
           "name": "hasLoadingText",
-          "assignment": true
+          "assignment": false
         }
       ]
     ]
