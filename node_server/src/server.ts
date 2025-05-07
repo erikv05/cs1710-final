@@ -25,7 +25,7 @@ curl -X POST http://localhost:3000/   -H "Content-Type: application/json"   -d '
 
 */
 
-app.post('/', (req, res) => {
+app.post('/', async (req, res) => {
     const parseResult = NodeAPIRequestSchema.safeParse(req.body);
     if (!parseResult.success) {
         res.status(400).send('Invalid request body: properties must be a NodeAPIRequestSchema object');
@@ -57,11 +57,33 @@ app.post('/', (req, res) => {
         })
     }
 
+    // Make requests to Z3 server for each test
+    const z3Results = await Promise.all(tests.map(async (test) => {
+        try {
+            const response = await fetch('http://localhost:8000/solve/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(test)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Z3 server responded with status ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error: any) {
+            console.error('Error calling Z3 server:', error.message);
+            return { error: error.message };
+        }
+    }));
 
-
-    // TODO: call z3 api
-
-    res.send({"result": {"success": true}, "data": result});
+    res.send({
+        "result": { "success": true },
+        "data": result,
+        "z3Results": z3Results
+    });
 });
 
 app.listen(port, () => {
