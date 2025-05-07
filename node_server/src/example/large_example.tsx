@@ -78,13 +78,17 @@ const SmartHomeSystem: React.FC = () => {
   }
   // Normal day mode with energy efficiency
   else if (!isNightMode && isEnergyEfficientMode && !isHeaterOn && !isACOn) {
+    let lightsStatus = isLightOn ? "Lights: ON" : "Lights: OFF";
+    let doorStatus = isDoorLocked ? "Door: LOCKED" : "Door: UNLOCKED";
+    let windowStatus = isWindowOpen ? "Window: OPEN" : "Window: CLOSED";
+    
     return (
       <div className="smart-home-system day-efficient-mode" aria-label="energy-efficient-mode">
         <h1>Smart Home System - Energy Efficient Day Mode</h1>
         <div className="state-indicators" role="status">
-          <div>Lights: {isLightOn ? 'ON' : 'OFF'}</div>
-          <div>Door: {isDoorLocked ? 'LOCKED' : 'UNLOCKED'}</div>
-          <div>Window: {isWindowOpen ? 'OPEN' : 'CLOSED'}</div>
+          <div>{lightsStatus}</div>
+          <div>{doorStatus}</div>
+          <div>{windowStatus}</div>
           <div aria-label="energy-mode-status">Energy Mode: EFFICIENT</div>
         </div>
         <div className="control-panel" role="group" aria-label="home-controls">
@@ -122,13 +126,19 @@ const SmartHomeSystem: React.FC = () => {
   }
   // Climate control active
   else if (!isNightMode && (isHeaterOn || isACOn) && !isEnergyEfficientMode) {
+    let heaterStatus = isHeaterOn ? "Heater: ON" : "Heater: OFF";
+    let acStatus = isACOn ? "AC: ON" : "AC: OFF";
+    let windowStatus = isWindowOpen ? "Window: OPEN" : "Window: CLOSED";
+    let switchButtonText = isHeaterOn ? "Switch to AC" : "Switch to Heater";
+    let windowButtonText = isWindowOpen ? "Close Window" : "Open Window";
+    
     return (
       <div className="smart-home-system climate-mode" aria-label="climate-control-mode">
         <h1>Smart Home System - Climate Control Active</h1>
         <div className="state-indicators" role="status">
-          <div>Heater: {isHeaterOn ? 'ON' : 'OFF'}</div>
-          <div>AC: {isACOn ? 'ON' : 'OFF'}</div>
-          <div>Window: {isWindowOpen ? 'OPEN' : 'CLOSED'}</div>
+          <div>{heaterStatus}</div>
+          <div>{acStatus}</div>
+          <div>{windowStatus}</div>
           <div aria-label="energy-mode-status">Energy Mode: NORMAL</div>
         </div>
         <div className="climate-controls" role="group" aria-label="climate-controls">
@@ -155,13 +165,13 @@ const SmartHomeSystem: React.FC = () => {
             aria-label="switch-climate-mode"
             data-testid="switch-climate-button"
           >
-            Switch to {isHeaterOn ? 'AC' : 'Heater'}
+            {switchButtonText}
           </button>
           <button 
             onClick={() => setIsWindowOpen(!isWindowOpen)}
             aria-label="toggle-window"
           >
-            {isWindowOpen ? 'Close' : 'Open'} Window
+            {windowButtonText}
           </button>
         </div>
       </div>
@@ -169,12 +179,14 @@ const SmartHomeSystem: React.FC = () => {
   }
   // Entertainment mode
   else if (!isNightMode && isMusicPlaying && !isAlarmArmed) {
+    let lightsStatus = isLightOn ? "Lights: ON" : "Lights: OFF";
+    
     return (
       <div className="smart-home-system entertainment-mode" aria-label="entertainment-mode">
         <h1>Smart Home System - Entertainment Mode</h1>
         <div className="state-indicators" role="status">
           <div aria-label="music-status">Music: PLAYING</div>
-          <div>Lights: {isLightOn ? 'ON' : 'OFF'}</div>
+          <div>{lightsStatus}</div>
         </div>
         <div className="entertainment-controls" role="group" aria-label="entertainment-controls">
           <button 
@@ -262,13 +274,16 @@ const SmartHomeSystem: React.FC = () => {
   }
   // Leaving home sequence
   else if (!isMotionDetected && !isNightMode && !isMusicPlaying) {
+    let doorStatus = isDoorLocked ? "Door: LOCKED" : "Door: UNLOCKED";
+    let alarmStatus = isAlarmArmed ? "Alarm: ARMED" : "Alarm: DISARMED";
+    
     return (
       <div className="smart-home-system away-mode" aria-label="away-mode">
         <h1>Smart Home System - Away Mode</h1>
         <div className="state-indicators" role="status">
           <div>Motion: NONE</div>
-          <div>Door: {isDoorLocked ? 'LOCKED' : 'UNLOCKED'}</div>
-          <div aria-label="alarm-status">Alarm: {isAlarmArmed ? 'ARMED' : 'DISARMED'}</div>
+          <div>{doorStatus}</div>
+          <div aria-label="alarm-status">{alarmStatus}</div>
         </div>
         <div className="away-controls" role="group" aria-label="away-controls">
           <button 
@@ -344,22 +359,35 @@ const SmartHomeSystem: React.FC = () => {
   }
   // Final fallback for any other state combination
   else {
+    let lightsStatus = isLightOn ? "Lights: ON" : "Lights: OFF";
+    let doorStatus = isDoorLocked ? "Door: LOCKED" : "Door: UNLOCKED";
+    let windowStatus = isWindowOpen ? "Window: OPEN" : "Window: CLOSED";
+    let heaterStatus = isHeaterOn ? "Heater: ON" : "Heater: OFF";
+    let acStatus = isACOn ? "AC: ON" : "AC: OFF";
+    let motionStatus = isMotionDetected ? "Motion: DETECTED" : "Motion: NONE";
+    let nightModeStatus = isNightMode ? "Night Mode: ON" : "Night Mode: OFF";
+    let alarmStatus = isAlarmArmed ? "Alarm: ARMED" : "Alarm: DISARMED";
+    let musicStatus = isMusicPlaying ? "Music: PLAYING" : "Music: OFF";
+    let garageStatus = isGarageOpen ? "Garage: OPEN" : "Garage: CLOSED";
+    let sprinklerStatus = isSprinklerOn ? "Sprinkler: ON" : "Sprinkler: OFF";
+    let energyModeStatus = isEnergyEfficientMode ? "Energy Mode: EFFICIENT" : "Energy Mode: NORMAL";
+    
     return (
       <div className="smart-home-system misc-state" aria-label="custom-state">
         <h1>Smart Home System - Custom State</h1>
         <div className="state-indicators" role="status">
-          <div>Lights: {isLightOn ? 'ON' : 'OFF'}</div>
-          <div>Door: {isDoorLocked ? 'LOCKED' : 'UNLOCKED'}</div>
-          <div>Window: {isWindowOpen ? 'OPEN' : 'CLOSED'}</div>
-          <div>Heater: {isHeaterOn ? 'ON' : 'OFF'}</div>
-          <div>AC: {isACOn ? 'ON' : 'OFF'}</div>
-          <div>Motion: {isMotionDetected ? 'DETECTED' : 'NONE'}</div>
-          <div>Night Mode: {isNightMode ? 'ON' : 'OFF'}</div>
-          <div>Alarm: {isAlarmArmed ? 'ARMED' : 'DISARMED'}</div>
-          <div>Music: {isMusicPlaying ? 'PLAYING' : 'OFF'}</div>
-          <div>Garage: {isGarageOpen ? 'OPEN' : 'CLOSED'}</div>
-          <div>Sprinkler: {isSprinklerOn ? 'ON' : 'OFF'}</div>
-          <div>Energy Mode: {isEnergyEfficientMode ? 'EFFICIENT' : 'NORMAL'}</div>
+          <div>{lightsStatus}</div>
+          <div>{doorStatus}</div>
+          <div>{windowStatus}</div>
+          <div>{heaterStatus}</div>
+          <div>{acStatus}</div>
+          <div>{motionStatus}</div>
+          <div>{nightModeStatus}</div>
+          <div>{alarmStatus}</div>
+          <div>{musicStatus}</div>
+          <div>{garageStatus}</div>
+          <div>{sprinklerStatus}</div>
+          <div>{energyModeStatus}</div>
         </div>
         <div className="reset-controls">
           <button 
