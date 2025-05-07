@@ -32,7 +32,7 @@ export interface SolverRequest {
   pbt_assertions: PBTOutAssertion;
 } 
 
-export interface ParseResult {
+export interface ReactParseResult {
   state_variables: string[];
   pbt_variables: string[];
   branches: Branch[];

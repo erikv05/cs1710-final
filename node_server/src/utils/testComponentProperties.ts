@@ -1,6 +1,6 @@
 import { Project, SyntaxKind, Node, IfStatement } from "ts-morph";
 import { PBTAssertion, TextPBTAssertion } from "../types/PropertyDefinition";
-import { ParseResult, AssertionSet } from "../types/SolverRequest";
+import { ReactParseResult, AssertionSet } from "../types/SolverRequest";
 import { Branch, Literal, Transition } from "../types/SolverRequest";
 
 interface Condition {
@@ -45,7 +45,7 @@ function processAssertion(assertion: PBTAssertion, content: string): boolean {
 export function parseReactComponent(
   filePath: string, 
   properties: PBTAssertion[]
-): ParseResult[] {
+): ReactParseResult {
   const project = new Project({ tsConfigFilePath: "tsconfig.json" });
   const sourceFile = project.addSourceFileAtPath(filePath);
   
@@ -89,14 +89,14 @@ export function parseReactComponent(
 
   
   // Create a single result with all the information
-  const result: ParseResult = {
+  const result: ReactParseResult = {
     state_variables: Array.from(uniqueStateVars),
     pbt_variables: pbtVariables,
     branches,
     assertions
   };
   
-  return [result];
+  return result;
 }
 
 // Process an if-else-if chain and add its branches
@@ -489,22 +489,20 @@ export function scanComponentTransitions(filePath: string): { [branch: number]: 
 export function testComponentProperties(
   filePath: string, 
   properties: PBTAssertion[]
-): ParseResult[] {
-  const results = parseReactComponent(filePath, properties);
+): ReactParseResult {
+  const result = parseReactComponent(filePath, properties);
   
   // Scan for transitions directly
   const branchTransitions = scanComponentTransitions(filePath);
   
   // Update each branch with its transitions
   let branchIndex = 0;
-  results.forEach(result => {
-    result.branches.forEach(branch => {
-      branchIndex++;
-      if (branchTransitions[branchIndex] && branchTransitions[branchIndex].length > 0) {
-        branch.transitions = branchTransitions[branchIndex];
-      }
-    });
+  result.branches.forEach(branch => {
+    branchIndex++;
+    if (branchTransitions[branchIndex] && branchTransitions[branchIndex].length > 0) {
+      branch.transitions = branchTransitions[branchIndex];
+    }
   });
   
-  return results;
+  return result;
 }

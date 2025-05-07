@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import { NodeAPIRequestSchema, PBTAssertion, TextPBTAssertion } from './types/PropertyDefinition';
+import { NodeAPIRequestSchema, TextPBTAssertion } from './types/PropertyDefinition';
 import { testComponentProperties } from './utils/testComponentProperties';
-import { PropertyTestResult } from './types/PropertyTestResult';
+import { ReactParseResult, SolverRequest } from './types/SolverRequest';
 
 const app = express();
 const port = 3000; // Yes this is hardcoded sue me
@@ -36,18 +36,32 @@ app.post('/', (req, res) => {
     const textAssertions: TextPBTAssertion[] = req.body.textAssertions;
     const filePath: string = req.body.filepath;
 
-    let results: PropertyTestResult[] = [];
+    let result: ReactParseResult;
 
     try {
-        results = testComponentProperties(filePath, textAssertions);
+        result = testComponentProperties(filePath, textAssertions);
     } catch (error: any) {
         res.status(500).send('Error processing the file: ' + error.message);
         return;
     }
 
+    let tests: SolverRequest[] = [];
+
+    for (let i = 0; i < result.assertions.length; i++) {
+        tests.push({
+            state_variables: result.state_variables,
+            pbt_variables: result.pbt_variables,
+            branches: result.branches,
+            preconditionals: result.assertions[i].preconditionals,
+            pbt_assertions: result.assertions[i].pbt_assertions
+        })
+    }
+
+
+
     // TODO: call z3 api
 
-    res.send({"result": {"success": true}, "data": results});
+    res.send({"result": {"success": true}, "data": result});
 });
 
 app.listen(port, () => {
