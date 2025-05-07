@@ -1,3 +1,5 @@
+import type { Z3Response } from './Z3Response';
+
 export interface PropertyTestResult {
   assertion: {
     name: string;
@@ -7,4 +9,5 @@ export interface PropertyTestResult {
   };
   success: boolean;
   errorMessage?: string;
+  z3Result?: Z3Response | null;
 } 

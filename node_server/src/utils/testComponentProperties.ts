@@ -55,7 +55,16 @@ export function parseReactComponent(
   const branches: Branch[] = [];
   
   // Extract property names for pbt_variables
-  const pbtVariables = properties.map(prop => prop.name);
+  const pbtVariables = new Set<string>();
+  properties.forEach(prop => {
+    pbtVariables.add(prop.name);
+    // Add any variables used in assertions
+    if (prop.rhs) {
+      prop.rhs.forEach(clause => {
+        clause.forEach(lit => pbtVariables.add(lit.name));
+      });
+    }
+  });
   
   // Scan entire file for useState hooks to build a mapping of setters to state variables
   const stateSetterMap = extractUseStateHooks(sourceFile);
@@ -77,21 +86,20 @@ export function parseReactComponent(
   const assertions: AssertionSet[] = []
 
   properties.forEach(property => {
-    return {
+    assertions.push({
       preconditionals: property.lhs,
       pbt_assertions: {
         name: property.name,
         cnf: property.rhs
       }
-    }
-
+    })
   })
 
   
   // Create a single result with all the information
   const result: ReactParseResult = {
     state_variables: Array.from(uniqueStateVars),
-    pbt_variables: pbtVariables,
+    pbt_variables: Array.from(pbtVariables),
     branches,
     assertions
   };

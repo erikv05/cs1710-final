@@ -104,7 +104,10 @@ class PageTransitionSolver():
                 [var for var in self.req.state_variables if var != transition.name]
             ])
         )
-    def CheckBranch(self, branch: Branch, pre: int, post: int) -> Bool:
+    def CheckBranch(self, branch: Branch, pre: int, post: int) -> BoolRef:
+        if not branch.transitions:
+            # If there are no transitions, just check the conditions
+            return self.CheckCNF(branch.conditions, pre)
         return And(
             self.CheckCNF(branch.conditions, pre),
             Or(
@@ -115,6 +118,9 @@ class PageTransitionSolver():
 
     def CheckDelta(self, pre: int, post: int) -> BoolRef:
         #returns a Bool checking if the transition between two states is valid
+        if not self.req.branches:
+            # If there are no branches, allow any transition
+            return True
         return Or([ 
             self.CheckBranch(branch, pre, post) #pre should satisfy one branch (exactly one semantics should be handled by the API user)
             for branch in self.req.branches

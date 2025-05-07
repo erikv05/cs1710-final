@@ -29,7 +29,7 @@ export interface SolverRequest {
   pbt_variables: string[];
   branches: Branch[];
   preconditionals: Literal[][];
-  pbt_assertions: PBTOutAssertion;
+  pbt_assertion: PBTOutAssertion;
 } 
 
 export interface ReactParseResult {

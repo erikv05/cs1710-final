@@ -10,21 +10,16 @@ import {
   alpha
 } from '@mui/material';
 import type { PropertyTestResult } from '../types/PropertyTestResult';
+import type { Z3Response } from '../types/Z3Response';
 import axios from 'axios';
 
 interface ExampleTestProps {
   setResults: (results: PropertyTestResult[] | null) => void;
 }
 
-interface ServerResult {
-  assertion?: {
-    name?: string;
-    textToFind?: string;
-  };
-  name?: string;
-  textToFind?: string;
-  success?: boolean;
-  errorMessage?: string;
+// Define response interface that includes possible errors
+interface ServerResponse {
+  results: (Z3Response | { error: string })[];
 }
 
 const ExampleTest = ({ setResults }: ExampleTestProps) => {
@@ -36,7 +31,7 @@ const ExampleTest = ({ setResults }: ExampleTestProps) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post('http://localhost:3000/', {
+      const response = await axios.post<ServerResponse>('http://localhost:3000/', {
         filepath,
         textAssertions: [
           {
@@ -72,18 +67,36 @@ const ExampleTest = ({ setResults }: ExampleTestProps) => {
 
       console.log("Server response:", response.data);
       
-      // Ensure data has the correct format
-      if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        // Transform the data to match our PropertyTestResult interface
-        const formattedResults = response.data.data.map((result: ServerResult) => {
+      // Check if response has the results array
+      if (response.data && Array.isArray(response.data.results)) {
+        // Map each result to PropertyTestResult format
+        const formattedResults = response.data.results.map((z3Result: Z3Response | { error: string }, index: number) => {
+          // Get assertion information from our test request
+          const assertionInfo = {
+            name: ['Has Loading Text', 'Has Dark Mode Button', 'Has Light Mode Button'][index] || `Test ${index + 1}`,
+            type: 'TextPBTAssertion',
+            textToFind: ['Loading...', 'Switch to Light Mode', 'Switch to Dark Mode'][index]
+          };
+          
+          // If there's an error reported by the server
+          if ('error' in z3Result) {
+            return {
+              assertion: assertionInfo,
+              success: false,
+              errorMessage: z3Result.error,
+              z3Result: null
+            };
+          }
+          
+          // If it's a properly formatted Z3 response
           return {
-            assertion: {
-              name: result.assertion?.name || result.name || "Unnamed Test",
-              type: "TextPBTAssertion",
-              textToFind: result.assertion?.textToFind || result.textToFind
-            },
-            success: result.success !== undefined ? result.success : false,
-            errorMessage: result.errorMessage
+            assertion: assertionInfo,
+            // Success if the result is "passed"
+            success: z3Result.result === 'passed',
+            // Only include errorMessage if it's a failed result
+            errorMessage: z3Result.result === 'failed' ? `Failed: ${z3Result.violated_pbt}` : undefined,
+            // Attach the Z3 result data
+            z3Result
           };
         });
         

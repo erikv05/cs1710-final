@@ -8,11 +8,19 @@ import {
   Paper,
   Tabs,
   Tab,
-  Typography
+  Typography,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import type { PropertyTestResult } from './types/PropertyTestResult';
 import ExampleTest from './components/ExampleTest';
 import TestConfigForm from './components/TestConfigForm';
+import type { Literal } from './types/Z3Response';
 
 // Placeholder components until we resolve the import issues
 const AppHeader = ({ toggleTheme, isDarkMode }: { toggleTheme: () => void, isDarkMode: boolean }) => {
@@ -25,7 +33,7 @@ const AppHeader = ({ toggleTheme, isDarkMode }: { toggleTheme: () => void, isDar
         color: 'text.primary',
         borderRadius: 2,
         backdropFilter: 'blur(8px)',
-        boxShadow: theme => isDarkMode 
+        boxShadow: () => isDarkMode 
           ? '0 8px 32px rgba(0, 0, 0, 0.2)' 
           : '0 8px 32px rgba(0, 0, 0, 0.05)',
         transition: 'all 0.3s ease'
@@ -40,7 +48,7 @@ const AppHeader = ({ toggleTheme, isDarkMode }: { toggleTheme: () => void, isDar
             sx={{ 
               fontWeight: 700, 
               letterSpacing: '-0.05em',
-              background: theme => isDarkMode 
+              background: () => isDarkMode 
                 ? 'linear-gradient(90deg, #90caf9 0%, #64b5f6 100%)' 
                 : 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
               WebkitBackgroundClip: 'text',
@@ -65,7 +73,7 @@ const AppHeader = ({ toggleTheme, isDarkMode }: { toggleTheme: () => void, isDar
           onClick={toggleTheme} 
           sx={{ 
             cursor: 'pointer',
-            bgcolor: theme => isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+            bgcolor: () => isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
             p: 1.5,
             px: 2.5,
             borderRadius: 5,
@@ -77,7 +85,7 @@ const AppHeader = ({ toggleTheme, isDarkMode }: { toggleTheme: () => void, isDar
             transition: 'all 0.2s ease',
             color: 'text.primary',
             '&:hover': {
-              bgcolor: theme => isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+              bgcolor: () => isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
               transform: 'translateY(-2px)'
             }
           }}
@@ -85,6 +93,153 @@ const AppHeader = ({ toggleTheme, isDarkMode }: { toggleTheme: () => void, isDar
           {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         </Box>
       </Box>
+    </Box>
+  );
+};
+
+interface TestResultDisplayProps {
+  result: PropertyTestResult;
+}
+
+// Component to render the state that violated a property
+const StateTable = ({ states }: { states: Literal[][] }) => {
+  if (!states || states.length === 0) {
+    return <Typography sx={{ fontStyle: 'italic', mt: 1 }}>No state information available</Typography>;
+  }
+
+  return (
+    <Box sx={{ mt: 2, overflow: 'auto' }}>
+      <Typography sx={{ fontWeight: 600, mb: 1 }}>Failing State Variables:</Typography>
+      <TableContainer component={Paper} sx={{ maxHeight: 300, bgcolor: 'background.paper' }}>
+        <Table size="small" stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 600 }}>State</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Variable</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Value</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {states.map((stateVars, stateIndex) => 
+              stateVars.map((variable, varIndex) => (
+                <TableRow key={`${stateIndex}-${varIndex}`}>
+                  <TableCell>{stateIndex + 1}</TableCell>
+                  <TableCell>
+                    <code>{variable.name}</code>
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={variable.assignment.toString()} 
+                      size="small"
+                      color={variable.assignment ? "primary" : "default"}
+                      sx={{ fontFamily: 'monospace' }}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+};
+
+// Component to display a single test result
+const TestResultDisplay = ({ result }: TestResultDisplayProps) => {
+  // Ensure result and assertion are defined
+  if (!result || !result.assertion) {
+    return (
+      <Box 
+        sx={{ 
+          p: 3, 
+          mb: 2, 
+          bgcolor: 'warning.light', 
+          borderRadius: 2,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        Invalid test result format
+      </Box>
+    );
+  }
+  
+  const isPassed = result.success || (result.z3Result?.result === 'passed');
+  const violatedPbt = result.z3Result?.violated_pbt || '';
+  const failingStates = result.z3Result?.states || [];
+  
+  return (
+    <Box 
+      sx={{ 
+        p: 3, 
+        mb: 2, 
+        bgcolor: isPassed ? 'success.light' : 'error.light', 
+        borderRadius: 2,
+        color: isPassed ? 'success.contrastText' : 'error.contrastText',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+        transform: 'translateY(0)',
+        transition: 'all 0.2s ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 6px 16px rgba(0, 0, 0, 0.12)'
+        }
+      }}
+    >
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        mb: 1
+      }}>
+        <Box sx={{ fontWeight: 600, fontSize: '1.1rem', letterSpacing: '-0.025em' }}>
+          {result.assertion.name || "Unnamed Test"}
+        </Box>
+        <Box sx={{ 
+          px: 2, 
+          py: 0.5, 
+          bgcolor: isPassed ? 'success.dark' : 'error.dark',
+          borderRadius: 5,
+          fontSize: '0.85rem',
+          fontWeight: 500
+        }}>
+          {isPassed ? 'Success' : 'Failed'}
+        </Box>
+      </Box>
+      
+      {result.assertion.type === 'TextPBTAssertion' && result.assertion.textToFind && (
+        <Box sx={{ fontSize: '0.95rem', opacity: 0.9, my: 1 }}>
+          Looking for text: <span style={{ fontFamily: 'monospace', padding: '0.15rem 0.3rem', background: 'rgba(0,0,0,0.1)', borderRadius: '3px' }}>"{result.assertion.textToFind}"</span>
+        </Box>
+      )}
+      
+      {!isPassed && (
+        <>
+          {violatedPbt && (
+            <Box sx={{ mt: 2, mb: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                Violated Property: <code style={{ backgroundColor: 'rgba(0,0,0,0.1)', padding: '2px 4px', borderRadius: '3px' }}>{violatedPbt}</code>
+              </Typography>
+            </Box>
+          )}
+          
+          {failingStates.length > 0 && (
+            <StateTable states={failingStates} />
+          )}
+          
+          {result.errorMessage && (
+            <Box sx={{ 
+              mt: 2, 
+              p: 2, 
+              bgcolor: 'rgba(0,0,0,0.1)', 
+              borderRadius: 1.5,
+              fontSize: '0.9rem',
+              fontFamily: 'monospace'
+            }}>
+              {result.errorMessage}
+            </Box>
+          )}
+        </>
+      )}
     </Box>
   );
 };
@@ -129,91 +284,9 @@ const TestResults = ({ results }: { results: PropertyTestResult[] }) => {
     >
       <Box sx={{ fontSize: '1.5rem', mb: 3, fontWeight: 600, letterSpacing: '-0.025em' }}>Test Results</Box>
       <Box>
-        {results.map((result, i) => {
-          // Ensure result and assertion are defined
-          if (!result || !result.assertion) {
-            return (
-              <Box 
-                key={i} 
-                sx={{ 
-                  p: 3, 
-                  mb: 2, 
-                  bgcolor: 'warning.light', 
-                  borderRadius: 2,
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                  transform: 'translateY(0)',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.12)'
-                  }
-                }}
-              >
-                Invalid test result format
-              </Box>
-            );
-          }
-          
-          return (
-            <Box 
-              key={i} 
-              sx={{ 
-                p: 3, 
-                mb: 2, 
-                bgcolor: result.success ? 'success.light' : 'error.light', 
-                borderRadius: 2,
-                color: result.success ? 'success.contrastText' : 'error.contrastText',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-                transform: 'translateY(0)',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.12)'
-                }
-              }}
-            >
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                mb: 1
-              }}>
-                <Box sx={{ fontWeight: 600, fontSize: '1.1rem', letterSpacing: '-0.025em' }}>
-                  {result.assertion.name || "Unnamed Test"}
-                </Box>
-                <Box sx={{ 
-                  px: 2, 
-                  py: 0.5, 
-                  bgcolor: result.success ? 'success.dark' : 'error.dark',
-                  borderRadius: 5,
-                  fontSize: '0.85rem',
-                  fontWeight: 500
-                }}>
-                  {result.success ? 'Success' : 'Failed'}
-                </Box>
-              </Box>
-              
-              {result.assertion.type === 'TextPBTAssertion' && result.assertion.textToFind && (
-                <Box sx={{ fontSize: '0.95rem', opacity: 0.9, my: 1 }}>
-                  Looking for text: <span style={{ fontFamily: 'monospace', padding: '0.15rem 0.3rem', background: 'rgba(0,0,0,0.1)', borderRadius: '3px' }}>"{result.assertion.textToFind}"</span>
-                </Box>
-              )}
-              
-              {!result.success && result.errorMessage && (
-                <Box sx={{ 
-                  mt: 2, 
-                  p: 2, 
-                  bgcolor: 'rgba(0,0,0,0.1)', 
-                  borderRadius: 1.5,
-                  fontSize: '0.9rem',
-                  fontFamily: 'monospace'
-                }}>
-                  {result.errorMessage}
-                </Box>
-              )}
-            </Box>
-          );
-        })}
+        {results.map((result, i) => (
+          <TestResultDisplay key={i} result={result} />
+        ))}
       </Box>
     </Paper>
   );
