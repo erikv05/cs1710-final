@@ -2,6 +2,8 @@ import { Project, SyntaxKind, Node, IfStatement } from "ts-morph";
 import { PBTAssertion, TextPBTAssertion, LabelPBTAssertion } from "../types/PropertyDefinition";
 import { ReactParseResult, AssertionSet } from "../types/SolverRequest";
 import { Branch, Literal, Transition } from "../types/SolverRequest";
+import { checkHtmlPropertyValue } from "../../../html_parser/htmlParser.js";
+
 
 interface Condition {
   stateVar: string;
@@ -44,7 +46,11 @@ class TextAssertionHandler implements AssertionHandler {
 
   evaluate(assertion: PBTAssertion, content: string): boolean {
     const textAssertion = assertion as TextPBTAssertion;
-    return content.includes(textAssertion.textToFind);
+    // OLD
+    // return content.includes(textAssertion.textToFind);
+    // NEW
+    const textToFind = textAssertion.textToFind;
+    return checkHtmlPropertyValue(content, "", "rawText", textToFind);
   }
 }
 
@@ -59,16 +65,25 @@ class LabelAssertionHandler implements AssertionHandler {
     const labelToFind = labelAssertion.labelToFind;
     
     // Check for various forms of essibility attributes
-    return content.includes(`aria-label="${labelToFind}"`) || 
-           content.includes(`aria-label='${labelToFind}'`) ||
-           content.includes(`aria-labelledby="${labelToFind}"`) ||
-           content.includes(`aria-labelledby='${labelToFind}'`) ||
-           content.includes(`role="${labelToFind}"`) ||
-           content.includes(`role='${labelToFind}'`) || 
-           content.includes(`id="${labelToFind}"`) ||
-           content.includes(`id='${labelToFind}'`) ||
-           content.includes(`data-testid="${labelToFind}"`) ||
-           content.includes(`data-testid='${labelToFind}'`);
+    // OLD
+    
+    // return content.includes(`aria-label="${labelToFind}"`) || 
+    //        content.includes(`aria-label='${labelToFind}'`) ||
+    //        content.includes(`aria-labelledby="${labelToFind}"`) ||
+    //        content.includes(`aria-labelledby='${labelToFind}'`) ||
+    //        content.includes(`role="${labelToFind}"`) ||
+    //        content.includes(`role='${labelToFind}'`) || 
+    //        content.includes(`id="${labelToFind}"`) ||
+    //        content.includes(`id='${labelToFind}'`) ||
+    //        content.includes(`data-testid="${labelToFind}"`) ||
+    //        content.includes(`data-testid='${labelToFind}'`);
+
+    // NEW
+    return checkHtmlPropertyValue(content, "", "aria-label", labelToFind) ||
+            checkHtmlPropertyValue(content, "", "aria-labelledby", labelToFind) ||
+            checkHtmlPropertyValue(content, "", "role", labelToFind) ||
+            checkHtmlPropertyValue(content, "", "id", labelToFind) ||
+            checkHtmlPropertyValue(content, "", "data-testid", labelToFind);
   }
 }
 

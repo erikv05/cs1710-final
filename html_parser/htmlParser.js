@@ -19,38 +19,62 @@ function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value) {
     const root = parse(htmlString);
 
     // ASSUME cssClassOrId IS A CLASS FOR NOW
-
-    // Get all elements with the given class
-    const elements = root.querySelectorAll(`.${cssClassOrId}`);
-
-    // Traverse object
-    for (const element of elements) {
-        // Check if the property exists and has the expected value
-        if (property in element) {
-            const attrValue = element[property];
-            if (attrValue === value) {
-                return true;
+    if (cssClassOrId) {
+        
+        // Get all elements with the given class
+        const elements = root.querySelectorAll(`.${cssClassOrId}`);
+        
+        // Traverse object
+        for (const element of elements) {
+            // Check if the property exists and has the expected value
+            if (property in element) {
+                const attrValue = element[property];
+                if (attrValue === value) {
+                    return true;
+                }
             }
         }
-    }
+        
+        // TRY cssClassOrId AS AN ID INSTEAD
+        
+        // Look for the element with the given id
+        const element = root.querySelector(`#${cssClassOrId}`);
+        
+        // Traverse object
+        if (element) {
+            // Check if the property exists and has the expected value
+            if (property in element) {
+                const attrValue = element[property];
+                return attrValue === value;
+            } else {
+                // Property doesn't exist
+                return false;
+            }
+        } 
+        
+    } else {
+        // Look through all elements in the document deep recursively
+        function checkRecursively(node) {
+            // Check current node
+            if (property in node && node[property] === value) {
+                return true;
+            }
 
-    // TRY cssClassOrId AS AN ID INSTEAD
+            // Recurse on children
+            if (node.childNodes && node.childNodes.length > 0) {
+                for (const child of node.childNodes) {
+                    if (checkRecursively(child)) {
+                        return true;
+                    }
+                }
+            }
 
-    // Look for the element with the given id
-    const element = root.querySelector(`#${cssClassOrId}`);
-
-    // Traverse object
-    if (element) {
-        // Check if the property exists and has the expected value
-        if (property in element) {
-            const attrValue = element[property];
-            return attrValue === value;
-        } else {
-            // Property doesn't exist
             return false;
         }
-    } 
 
+        if (checkRecursively(root)) return true;
+    }
+        
     // No elements with the given class or id had the property-value pair
     return false;
 }
