@@ -54,28 +54,3 @@ function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value) {
     // No elements with the given class or id had the property-value pair
     return false;
 }
-
-// NEW FUNCTION: Check if any button element contains the specified text
-function checkButtonTextExists(htmlString, textToFind) {
-    // Convert to object with html parser
-    const root = parse(htmlString);
-    
-    // Get all button elements
-    const buttons = root.querySelectorAll('button');
-    
-    // Check if any button contains the text
-    for (const button of buttons) {
-        if (button.text.includes(textToFind)) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-// Export all functions
-module.exports = {
-    checkHtmlPropertyValueByFilepath,
-    checkHtmlPropertyValue,
-    checkButtonTextExists
-};
