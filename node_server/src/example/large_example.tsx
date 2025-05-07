@@ -22,16 +22,23 @@ const SmartHomeSystem: React.FC = () => {
   // Night mode with alarm armed scenario
   if (isNightMode && isAlarmArmed && !isLightOn && isDoorLocked) {
     return (
-      <div className="smart-home-system secure-mode">
+      <div className="smart-home-system secure-mode" aria-label="secure-night-mode">
         <h1>Smart Home System - Secure Night Mode</h1>
-        <div className="state-indicators">
+        <div className="state-indicators" role="status">
           <div>Status: Secure Night Mode Active</div>
-          <div>All systems are monitoring for intrusions</div>
+          <div aria-label="security-status">All systems are monitoring for intrusions</div>
         </div>
-        <button onClick={() => setIsMotionDetected(true)}>
+        <button 
+          onClick={() => setIsMotionDetected(true)}
+          aria-label="simulate-motion"
+          data-testid="motion-button"
+        >
           Simulate Motion Detection
         </button>
-        <button onClick={() => setIsNightMode(false)}>
+        <button 
+          onClick={() => setIsNightMode(false)}
+          aria-label="disable-night-mode"
+        >
           Disable Night Mode
         </button>
       </div>
@@ -40,22 +47,29 @@ const SmartHomeSystem: React.FC = () => {
   // Motion detected during night mode
   else if (isNightMode && isMotionDetected && !isLightOn && isAlarmArmed) {
     return (
-      <div className="smart-home-system alert-mode">
+      <div className="smart-home-system alert-mode" aria-label="alert-mode-container">
         <h1>Smart Home System - ALERT!</h1>
-        <div className="alert-banner">
+        <div className="alert-banner" role="alert" aria-label="motion-alert">
           Motion detected during night hours!
         </div>
         <div className="action-buttons">
-          <button onClick={() => {
-            setIsAlarmArmed(false);
-            setIsLightOn(true);
-          }}>
+          <button 
+            onClick={() => {
+              setIsAlarmArmed(false);
+              setIsLightOn(true);
+            }}
+            aria-label="disable-alarm"
+            data-testid="disable-alarm-button"
+          >
             Disable Alarm (Authorized)
           </button>
-          <button onClick={() => {
-            setIsMotionDetected(false);
-            setIsDoorLocked(true);
-          }}>
+          <button 
+            onClick={() => {
+              setIsMotionDetected(false);
+              setIsDoorLocked(true);
+            }}
+            aria-label="reset-motion-sensor"
+          >
             Reset Motion Sensor
           </button>
         </div>
@@ -65,28 +79,41 @@ const SmartHomeSystem: React.FC = () => {
   // Normal day mode with energy efficiency
   else if (!isNightMode && isEnergyEfficientMode && !isHeaterOn && !isACOn) {
     return (
-      <div className="smart-home-system day-efficient-mode">
+      <div className="smart-home-system day-efficient-mode" aria-label="energy-efficient-mode">
         <h1>Smart Home System - Energy Efficient Day Mode</h1>
-        <div className="state-indicators">
+        <div className="state-indicators" role="status">
           <div>Lights: {isLightOn ? 'ON' : 'OFF'}</div>
           <div>Door: {isDoorLocked ? 'LOCKED' : 'UNLOCKED'}</div>
           <div>Window: {isWindowOpen ? 'OPEN' : 'CLOSED'}</div>
-          <div>Energy Mode: EFFICIENT</div>
+          <div aria-label="energy-mode-status">Energy Mode: EFFICIENT</div>
         </div>
-        <div className="control-panel">
-          <button onClick={() => setIsLightOn(!isLightOn)}>
+        <div className="control-panel" role="group" aria-label="home-controls">
+          <button 
+            onClick={() => setIsLightOn(!isLightOn)}
+            aria-label="toggle-lights"
+          >
             Toggle Lights
           </button>
-          <button onClick={() => setIsDoorLocked(!isDoorLocked)}>
+          <button 
+            onClick={() => setIsDoorLocked(!isDoorLocked)}
+            aria-label="toggle-door-lock"
+          >
             Toggle Door Lock
           </button>
-          <button onClick={() => setIsWindowOpen(!isWindowOpen)}>
+          <button 
+            onClick={() => setIsWindowOpen(!isWindowOpen)}
+            aria-label="toggle-windows"
+          >
             Toggle Windows
           </button>
-          <button onClick={() => {
-            setIsHeaterOn(true);
-            setIsEnergyEfficientMode(false);
-          }}>
+          <button 
+            onClick={() => {
+              setIsHeaterOn(true);
+              setIsEnergyEfficientMode(false);
+            }}
+            aria-label="turn-on-heater"
+            data-testid="heater-button"
+          >
             Turn On Heater
           </button>
         </div>
@@ -96,34 +123,44 @@ const SmartHomeSystem: React.FC = () => {
   // Climate control active
   else if (!isNightMode && (isHeaterOn || isACOn) && !isEnergyEfficientMode) {
     return (
-      <div className="smart-home-system climate-mode">
+      <div className="smart-home-system climate-mode" aria-label="climate-control-mode">
         <h1>Smart Home System - Climate Control Active</h1>
-        <div className="state-indicators">
+        <div className="state-indicators" role="status">
           <div>Heater: {isHeaterOn ? 'ON' : 'OFF'}</div>
           <div>AC: {isACOn ? 'ON' : 'OFF'}</div>
           <div>Window: {isWindowOpen ? 'OPEN' : 'CLOSED'}</div>
-          <div>Energy Mode: NORMAL</div>
+          <div aria-label="energy-mode-status">Energy Mode: NORMAL</div>
         </div>
-        <div className="climate-controls">
-          <button onClick={() => {
-            setIsHeaterOn(false);
-            setIsACOn(false);
-            setIsEnergyEfficientMode(true);
-          }}>
+        <div className="climate-controls" role="group" aria-label="climate-controls">
+          <button 
+            onClick={() => {
+              setIsHeaterOn(false);
+              setIsACOn(false);
+              setIsEnergyEfficientMode(true);
+            }}
+            aria-label="turn-off-climate-control"
+          >
             Turn Off Climate Control
           </button>
-          <button onClick={() => {
-            if (isHeaterOn) {
-              setIsHeaterOn(false);
-              setIsACOn(true);
-            } else {
-              setIsACOn(false);
-              setIsHeaterOn(true);
-            }
-          }}>
+          <button 
+            onClick={() => {
+              if (isHeaterOn) {
+                setIsHeaterOn(false);
+                setIsACOn(true);
+              } else {
+                setIsACOn(false);
+                setIsHeaterOn(true);
+              }
+            }}
+            aria-label="switch-climate-mode"
+            data-testid="switch-climate-button"
+          >
             Switch to {isHeaterOn ? 'AC' : 'Heater'}
           </button>
-          <button onClick={() => setIsWindowOpen(!isWindowOpen)}>
+          <button 
+            onClick={() => setIsWindowOpen(!isWindowOpen)}
+            aria-label="toggle-window"
+          >
             {isWindowOpen ? 'Close' : 'Open'} Window
           </button>
         </div>
@@ -133,20 +170,30 @@ const SmartHomeSystem: React.FC = () => {
   // Entertainment mode
   else if (!isNightMode && isMusicPlaying && !isAlarmArmed) {
     return (
-      <div className="smart-home-system entertainment-mode">
+      <div className="smart-home-system entertainment-mode" aria-label="entertainment-mode">
         <h1>Smart Home System - Entertainment Mode</h1>
-        <div className="state-indicators">
-          <div>Music: PLAYING</div>
+        <div className="state-indicators" role="status">
+          <div aria-label="music-status">Music: PLAYING</div>
           <div>Lights: {isLightOn ? 'ON' : 'OFF'}</div>
         </div>
-        <div className="entertainment-controls">
-          <button onClick={() => setIsMusicPlaying(false)}>
+        <div className="entertainment-controls" role="group" aria-label="entertainment-controls">
+          <button 
+            onClick={() => setIsMusicPlaying(false)}
+            aria-label="stop-music"
+            data-testid="music-stop-button"
+          >
             Stop Music
           </button>
-          <button onClick={() => setIsLightOn(!isLightOn)}>
+          <button 
+            onClick={() => setIsLightOn(!isLightOn)}
+            aria-label="toggle-mood-lighting"
+          >
             Toggle Mood Lighting
           </button>
-          <button onClick={() => setIsNightMode(true)}>
+          <button 
+            onClick={() => setIsNightMode(true)}
+            aria-label="switch-to-night-mode"
+          >
             Switch to Night Mode
           </button>
         </div>
@@ -156,20 +203,27 @@ const SmartHomeSystem: React.FC = () => {
   // Garage open scenario
   else if (isGarageOpen && !isAlarmArmed && !isNightMode) {
     return (
-      <div className="smart-home-system garage-open-mode">
+      <div className="smart-home-system garage-open-mode" aria-label="garage-open-mode">
         <h1>Smart Home System - Garage Open</h1>
-        <div className="state-indicators">
-          <div>Garage: OPEN</div>
+        <div className="state-indicators" role="status">
+          <div aria-label="garage-status">Garage: OPEN</div>
           <div>Alarm: DISARMED</div>
         </div>
         <div className="action-buttons">
-          <button onClick={() => setIsGarageOpen(false)}>
+          <button 
+            onClick={() => setIsGarageOpen(false)}
+            aria-label="close-garage"
+            data-testid="garage-close-button"
+          >
             Close Garage
           </button>
-          <button onClick={() => {
-            setIsAlarmArmed(true);
-            setIsGarageOpen(false);
-          }}>
+          <button 
+            onClick={() => {
+              setIsAlarmArmed(true);
+              setIsGarageOpen(false);
+            }}
+            aria-label="secure-house"
+          >
             Secure House
           </button>
         </div>
@@ -179,20 +233,27 @@ const SmartHomeSystem: React.FC = () => {
   // Outdoor systems active
   else if (isSprinklerOn && !isWindowOpen && !isNightMode) {
     return (
-      <div className="smart-home-system outdoor-mode">
+      <div className="smart-home-system outdoor-mode" aria-label="outdoor-mode">
         <h1>Smart Home System - Outdoor Systems Active</h1>
-        <div className="state-indicators">
-          <div>Sprinklers: ON</div>
+        <div className="state-indicators" role="status">
+          <div aria-label="sprinkler-status">Sprinklers: ON</div>
           <div>Windows: CLOSED</div>
         </div>
         <div className="outdoor-controls">
-          <button onClick={() => setIsSprinklerOn(false)}>
+          <button 
+            onClick={() => setIsSprinklerOn(false)}
+            aria-label="turn-off-sprinklers"
+            data-testid="sprinkler-button"
+          >
             Turn Off Sprinklers
           </button>
-          <button onClick={() => {
-            setIsWindowOpen(true);
-            setIsSprinklerOn(false);
-          }}>
+          <button 
+            onClick={() => {
+              setIsWindowOpen(true);
+              setIsSprinklerOn(false);
+            }}
+            aria-label="open-windows"
+          >
             Open Windows
           </button>
         </div>
@@ -202,29 +263,39 @@ const SmartHomeSystem: React.FC = () => {
   // Leaving home sequence
   else if (!isMotionDetected && !isNightMode && !isMusicPlaying) {
     return (
-      <div className="smart-home-system away-mode">
+      <div className="smart-home-system away-mode" aria-label="away-mode">
         <h1>Smart Home System - Away Mode</h1>
-        <div className="state-indicators">
+        <div className="state-indicators" role="status">
           <div>Motion: NONE</div>
           <div>Door: {isDoorLocked ? 'LOCKED' : 'UNLOCKED'}</div>
-          <div>Alarm: {isAlarmArmed ? 'ARMED' : 'DISARMED'}</div>
+          <div aria-label="alarm-status">Alarm: {isAlarmArmed ? 'ARMED' : 'DISARMED'}</div>
         </div>
-        <div className="away-controls">
-          <button onClick={() => {
-            setIsDoorLocked(true);
-            setIsAlarmArmed(true);
-            setIsLightOn(false);
-          }}>
+        <div className="away-controls" role="group" aria-label="away-controls">
+          <button 
+            onClick={() => {
+              setIsDoorLocked(true);
+              setIsAlarmArmed(true);
+              setIsLightOn(false);
+            }}
+            aria-label="secure-house"
+            data-testid="secure-house-button"
+          >
             Secure House
           </button>
-          <button onClick={() => {
-            setIsEnergyEfficientMode(true);
-            setIsHeaterOn(false);
-            setIsACOn(false);
-          }}>
+          <button 
+            onClick={() => {
+              setIsEnergyEfficientMode(true);
+              setIsHeaterOn(false);
+              setIsACOn(false);
+            }}
+            aria-label="energy-saving-mode"
+          >
             Energy Saving Mode
           </button>
-          <button onClick={() => setIsMotionDetected(true)}>
+          <button 
+            onClick={() => setIsMotionDetected(true)}
+            aria-label="simulate-return-home"
+          >
             Simulate Return Home
           </button>
         </div>
@@ -234,24 +305,37 @@ const SmartHomeSystem: React.FC = () => {
   // Default/fallback state
   else if (!isNightMode && isDoorLocked && isAlarmArmed) {
     return (
-      <div className="smart-home-system default-mode">
+      <div className="smart-home-system default-mode" aria-label="standard-mode">
         <h1>Smart Home System - Standard Mode</h1>
-        <div className="state-indicators">
-          <div>System Ready</div>
+        <div className="state-indicators" role="status">
+          <div aria-label="system-ready">System Ready</div>
           <div>Door: LOCKED</div>
           <div>Alarm: ARMED</div>
         </div>
-        <div className="main-controls">
-          <button onClick={() => setIsDoorLocked(false)}>
+        <div className="main-controls" role="group" aria-label="main-controls">
+          <button 
+            onClick={() => setIsDoorLocked(false)}
+            aria-label="unlock-door"
+            data-testid="door-unlock-button"
+          >
             Unlock Door
           </button>
-          <button onClick={() => setIsNightMode(true)}>
+          <button 
+            onClick={() => setIsNightMode(true)}
+            aria-label="enable-night-mode"
+          >
             Enable Night Mode
           </button>
-          <button onClick={() => setIsMusicPlaying(true)}>
+          <button 
+            onClick={() => setIsMusicPlaying(true)}
+            aria-label="start-entertainment"
+          >
             Start Entertainment
           </button>
-          <button onClick={() => setIsGarageOpen(true)}>
+          <button 
+            onClick={() => setIsGarageOpen(true)}
+            aria-label="open-garage"
+          >
             Open Garage
           </button>
         </div>
@@ -261,9 +345,9 @@ const SmartHomeSystem: React.FC = () => {
   // Final fallback for any other state combination
   else {
     return (
-      <div className="smart-home-system misc-state">
+      <div className="smart-home-system misc-state" aria-label="custom-state">
         <h1>Smart Home System - Custom State</h1>
-        <div className="state-indicators">
+        <div className="state-indicators" role="status">
           <div>Lights: {isLightOn ? 'ON' : 'OFF'}</div>
           <div>Door: {isDoorLocked ? 'LOCKED' : 'UNLOCKED'}</div>
           <div>Window: {isWindowOpen ? 'OPEN' : 'CLOSED'}</div>
@@ -278,20 +362,24 @@ const SmartHomeSystem: React.FC = () => {
           <div>Energy Mode: {isEnergyEfficientMode ? 'EFFICIENT' : 'NORMAL'}</div>
         </div>
         <div className="reset-controls">
-          <button onClick={() => {
-            setIsLightOn(false);
-            setIsDoorLocked(true);
-            setIsWindowOpen(false);
-            setIsHeaterOn(false);
-            setIsACOn(false);
-            setIsMotionDetected(false);
-            setIsNightMode(false);
-            setIsAlarmArmed(true);
-            setIsMusicPlaying(false);
-            setIsGarageOpen(false);
-            setIsSprinklerOn(false);
-            setIsEnergyEfficientMode(true);
-          }}>
+          <button 
+            onClick={() => {
+              setIsLightOn(false);
+              setIsDoorLocked(true);
+              setIsWindowOpen(false);
+              setIsHeaterOn(false);
+              setIsACOn(false);
+              setIsMotionDetected(false);
+              setIsNightMode(false);
+              setIsAlarmArmed(true);
+              setIsMusicPlaying(false);
+              setIsGarageOpen(false);
+              setIsSprinklerOn(false);
+              setIsEnergyEfficientMode(true);
+            }}
+            aria-label="reset-all-systems"
+            data-testid="reset-button"
+          >
             Reset All Systems
           </button>
         </div>

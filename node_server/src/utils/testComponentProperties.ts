@@ -1,5 +1,5 @@
 import { Project, SyntaxKind, Node, IfStatement } from "ts-morph";
-import { PBTAssertion, TextPBTAssertion } from "../types/PropertyDefinition";
+import { PBTAssertion, TextPBTAssertion, LabelPBTAssertion } from "../types/PropertyDefinition";
 import { ReactParseResult, AssertionSet } from "../types/SolverRequest";
 import { Branch, Literal, Transition } from "../types/SolverRequest";
 
@@ -48,9 +48,34 @@ class TextAssertionHandler implements AssertionHandler {
   }
 }
 
+// Handler for LabelPBTAssertion
+class LabelAssertionHandler implements AssertionHandler {
+  canHandle(assertion: PBTAssertion): boolean {
+    return 'labelToFind' in assertion;
+  }
+
+  evaluate(assertion: PBTAssertion, content: string): boolean {
+    const labelAssertion = assertion as LabelPBTAssertion;
+    const labelToFind = labelAssertion.labelToFind;
+    
+    // Check for various forms of accessibility attributes
+    return content.includes(`aria-label="${labelToFind}"`) || 
+           content.includes(`aria-label='${labelToFind}'`) ||
+           content.includes(`aria-labelledby="${labelToFind}"`) ||
+           content.includes(`aria-labelledby='${labelToFind}'`) ||
+           content.includes(`role="${labelToFind}"`) ||
+           content.includes(`role='${labelToFind}'`) || 
+           content.includes(`id="${labelToFind}"`) ||
+           content.includes(`id='${labelToFind}'`) ||
+           content.includes(`data-testid="${labelToFind}"`) ||
+           content.includes(`data-testid='${labelToFind}'`);
+  }
+}
+
 // Registry of handlers
 const assertionHandlers: AssertionHandler[] = [
   new TextAssertionHandler(),
+  new LabelAssertionHandler(),
 ];
 
 // Gang of four would be proud

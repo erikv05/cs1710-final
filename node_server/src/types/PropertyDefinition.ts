@@ -1,42 +1,65 @@
 import { z } from 'zod';
 
-export interface Literal {
-  name: string;
-  assignment: boolean;
-}
-
+// Base PBT Assertion interface
 export interface PBTAssertion {
   name: string;
-  lhs: Literal[][];
-  rhs: Literal[][];
+  lhs: any[][];
+  rhs: any[][];
 }
 
-const PBTAssertionSchema = z.object({
-  name: z.string(),
-})
-
-// Find textToFind anywhere in the page
+// Text PBT Assertion interface
 export interface TextPBTAssertion extends PBTAssertion {
-  name: string;
   textToFind: string;
-  lhs: Literal[][];
-  rhs: Literal[][];
 }
+
+// Label PBT Assertion interface
+export interface LabelPBTAssertion extends PBTAssertion {
+  labelToFind: string;
+}
+
+// Schema for Text Assertion
+const TextPBTAssertionSchema = z.object({
+  name: z.string(),
+  textToFind: z.string(),
+  lhs: z.array(z.array(z.object({
+    name: z.string(),
+    assignment: z.boolean()
+  }))),
+  rhs: z.array(z.array(z.object({
+    name: z.string(),
+    assignment: z.boolean()
+  })))
+});
+
+// Schema for Label Assertion
+const LabelPBTAssertionSchema = z.object({
+  name: z.string(),
+  labelToFind: z.string(),
+  lhs: z.array(z.array(z.object({
+    name: z.string(),
+    assignment: z.boolean()
+  }))),
+  rhs: z.array(z.array(z.object({
+    name: z.string(),
+    assignment: z.boolean()
+  })))
+});
+
+// Union schema for all PBT assertion types
+export const PBTAssertionSchema = z.union([
+  TextPBTAssertionSchema,
+  LabelPBTAssertionSchema
+]);
 
 export const LiteralSchema = z.object({
   name: z.string(),
   assignment: z.boolean(),
 });
 
-export const TextPBTAssertionSchema = PBTAssertionSchema.extend({
-  name: z.string(),
-  textToFind: z.string(),
-  lhs: z.array(z.array(LiteralSchema)),
-  rhs: z.array(z.array(LiteralSchema)),
-});
-
 export const NodeAPIRequestSchema = z.object({
   filepath: z.string(),
-  textAssertions: z.array(TextPBTAssertionSchema),
-  useStatefulTesting: z.boolean().optional(),
-})
+  useStatefulTesting: z.boolean().optional().default(true),
+  textAssertions: z.array(PBTAssertionSchema)
+});
+
+export type NodeAPIRequest = z.infer<typeof NodeAPIRequestSchema>;

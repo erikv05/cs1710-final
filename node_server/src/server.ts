@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { NodeAPIRequestSchema, TextPBTAssertion } from './types/PropertyDefinition';
+import { NodeAPIRequestSchema, TextPBTAssertion, LabelPBTAssertion, PBTAssertion } from './types/PropertyDefinition';
 import { testComponentProperties } from './utils/testComponentProperties';
 import { ReactParseResult, SolverRequest, PBTOutAssertion } from './types/SolverRequest';
 import { Z3ResponseSchema, Z3Response } from './types/Z3Response';
@@ -45,24 +45,36 @@ app.post('/', async (req, res) => {
     }
 
     // We know this works b/c the above didn't fail
-    const textAssertions: TextPBTAssertion[] = req.body.textAssertions;
+    // Note: textAssertions field name is kept for backward compatibility, but now contains all assertion types
+    const assertions: PBTAssertion[] = req.body.textAssertions;
     const filePath: string = req.body.filepath;
     // Extract the useStatefulTesting flag (defaults to true for backward compatibility)
     const useStatefulTesting: boolean = req.body.useStatefulTesting !== false;
 
-    console.log("Received text assertions:", textAssertions);
-    console.log("Number of assertions: ", textAssertions.length)
+    console.log("Received assertions:", assertions);
+    console.log("Number of assertions: ", assertions.length)
     console.log("Use Stateful Testing: ", useStatefulTesting)
 
+    // Log assertion types for debugging
+    assertions.forEach((assertion, index) => {
+        if ('textToFind' in assertion) {
+            console.log(`Assertion ${index + 1} is a TextPBTAssertion looking for: "${(assertion as TextPBTAssertion).textToFind}"`);
+        } else if ('labelToFind' in assertion) {
+            console.log(`Assertion ${index + 1} is a LabelPBTAssertion looking for: "${(assertion as LabelPBTAssertion).labelToFind}"`);
+        } else {
+            console.log(`Assertion ${index + 1} has unknown type`);
+        }
+    });
+
     // Call testComponentProperties and handle both success and error cases
-    const parseResult2 = testComponentProperties(filePath, textAssertions);
+    const parseResult2 = testComponentProperties(filePath, assertions);
 
     // Check if the result contains validation errors
     if ('error' in parseResult2) {
         console.log("Validation errors:", parseResult2.error);
         
         // Map validation errors to results that can be displayed in the frontend
-        const errorResults = textAssertions.map((assertion, index) => {
+        const errorResults = assertions.map((assertion, index) => {
             // Find errors specific to this assertion
             const assertionErrors = parseResult2.error.filter(err => 
                 err.assertionName === assertion.name || !err.assertionName
