@@ -106,8 +106,11 @@ class PageTransitionSolver():
         )
     def CheckBranch(self, branch: Branch, pre: int, post: int) -> BoolRef:
         if not branch.transitions:
-            # If there are no transitions, just check the conditions
-            return self.CheckCNF(branch.conditions, pre)
+            # If there are no transitions, just check the conditions and check that nothing changes
+            return And(
+                self.CheckCNF(branch.conditions, pre),
+                And([self.trace[pre][var] == self.trace[post][var] for var in self.req.state_variables]) # no changes
+            )
         return And(
             self.CheckCNF(branch.conditions, pre),
             Or(
