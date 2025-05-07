@@ -1,138 +1,170 @@
 {
-    "state_variables": [
-      "isLoading",
-      "isDarkMode"
-    ],
-    "pbt_variables": [
-      "hasLoadingText",
-      "result"
-    ],
-    "branches": [
-      {
-        "conditions": [
-          [
-            {
-              "name": "isLoading",
-              "assignment": true
-            }
-          ],
-          [
-            {
-              "name": "isDarkMode",
-              "assignment": true
-            }
-          ]
-        ],
-        "implications": [
+  "state_variables": ["isLoading", "isDarkMode"],
+  "pbt_variables": [
+    "Has Loading Text",
+    "hasLoadingText",
+    "Has Dark Mode Button",
+    "hasDarkModeButton",
+    "Has Light Mode Button",
+    "hasLightModeButton"
+  ],
+  "branches": [
+    {
+      "conditions": [
+        [
           {
-            "name": "hasLoadingText",
+            "name": "isLoading",
             "assignment": true
           }
         ],
-        "transitions": []
-      },
-      {
-        "conditions": [
-          [
-            {
-              "name": "isLoading",
-              "assignment": true
-            }
-          ],
-          [
-            {
-              "name": "isDarkMode",
-              "assignment": false
-            }
-          ]
-        ],
-        "implications": [
+        [
           {
-            "name": "hasLoadingText",
+            "name": "isDarkMode",
+            "assignment": true
+          }
+        ]
+      ],
+      "implications": [
+        {
+          "name": "Has Loading Text",
+          "assignment": true
+        },
+        {
+          "name": "Has Dark Mode Button",
+          "assignment": false
+        },
+        {
+          "name": "Has Light Mode Button",
+          "assignment": false
+        }
+      ],
+      "transitions": []
+    },
+    {
+      "conditions": [
+        [
+          {
+            "name": "isLoading",
             "assignment": true
           }
         ],
-        "transitions": []
-      },
-      {
-        "conditions": [
-          [
-            {
-              "name": "isLoading",
-              "assignment": false
-            }
-          ],
-          [
-            {
-              "name": "isDarkMode",
-              "assignment": true
-            }
-          ]
-        ],
-        "implications": [
+        [
           {
-            "name": "hasLoadingText",
+            "name": "isDarkMode",
+            "assignment": false
+          }
+        ]
+      ],
+      "implications": [
+        {
+          "name": "Has Loading Text",
+          "assignment": true
+        },
+        {
+          "name": "Has Dark Mode Button",
+          "assignment": false
+        },
+        {
+          "name": "Has Light Mode Button",
+          "assignment": false
+        }
+      ],
+      "transitions": []
+    },
+    {
+      "conditions": [
+        [
+          {
+            "name": "isLoading",
             "assignment": false
           }
         ],
-        "transitions": [
+        [
           {
             "name": "isDarkMode",
-            "assignments": [
-              false
-            ]
+            "assignment": true
           }
         ]
-      },
-      {
-        "conditions": [
-          [
-            {
-              "name": "isLoading",
-              "assignment": false
-            }
-          ],
-          [
-            {
-              "name": "isDarkMode",
-              "assignment": false
-            }
-          ]
-        ],
-        "implications": [
+      ],
+      "implications": [
+        {
+          "name": "Has Loading Text",
+          "assignment": false
+        },
+        {
+          "name": "Has Dark Mode Button",
+          "assignment": true
+        },
+        {
+          "name": "Has Light Mode Button",
+          "assignment": false
+        }
+      ],
+      "transitions": [
+        {
+          "name": "isDarkMode",
+          "assignments": [false]
+        }
+      ]
+    },
+    {
+      "conditions": [
+        [
           {
-            "name": "hasLoadingText",
+            "name": "isLoading",
             "assignment": false
           }
         ],
-        "transitions": [
+        [
           {
             "name": "isDarkMode",
-            "assignments": [
-              true,
-              false
-            ]
+            "assignment": false
           }
         ]
+      ],
+      "implications": [
+        {
+          "name": "Has Loading Text",
+          "assignment": false
+        },
+        {
+          "name": "Has Dark Mode Button",
+          "assignment": false
+        },
+        {
+          "name": "Has Light Mode Button",
+          "assignment": true
+        }
+      ],
+      "transitions": [
+        {
+          "name": "isDarkMode",
+          "assignments": [true, false]
+        }
+      ]
+    }
+  ],
+  "preconditionals": [
+    [
+      {
+        "name": "isLoading",
+        "assignment": false
+      },
+      {
+        "name": "isDarkMode",
+        "assignment": false
       }
-    ],
-    "preconditionals": [
+    ]
+  ],
+  "pbt_assertion": {
+    "name": "Has Light Mode Button",
+    "cnf": [
       [
         {
-          "name": "default",
+          "name": "hasLightModeButton",
           "assignment": true
         }
       ]
-    ],
-    "pbt_assertion": {
-      "name": "hasLoadingText",
-      "cnf": [
-        [
-          {
-            "name": "result",
-            "assignment": true
-          }
-        ]
-      ]
-    }
+    ]
   }
+}
