@@ -1,7 +1,7 @@
 import { Project, SyntaxKind, Node, IfStatement } from "ts-morph";
 import { PBTAssertion, TextPBTAssertion } from "../types/PropertyDefinition";
-import { PropertyTestResult } from "../types/PropertyTestResult";
-import { Branch, PbtAssertion, Literal, Transition } from "../types/SolverRequest";
+import { ParseResult, AssertionSet } from "../types/SolverRequest";
+import { Branch, Literal, Transition } from "../types/SolverRequest";
 
 interface Condition {
   stateVar: string;
@@ -45,7 +45,7 @@ function processAssertion(assertion: PBTAssertion, content: string): boolean {
 export function parseReactComponent(
   filePath: string, 
   properties: PBTAssertion[]
-): PropertyTestResult[] {
+): ParseResult[] {
   const project = new Project({ tsConfigFilePath: "tsconfig.json" });
   const sourceFile = project.addSourceFileAtPath(filePath);
   
@@ -73,20 +73,27 @@ export function parseReactComponent(
     // Process the entire if-else-if chain
     processIfElseChain(ifStmt, stateSetterMap, properties, branches, uniqueStateVars);
   }
-  
-  // Create PbtAssertions with proper structure
-  const pbtAssertions: PbtAssertion[] = properties.map(p => ({
-    name: p.name,
-    cnf: p.rhs
-  }));
+
+  const assertions: AssertionSet[] = []
+
+  properties.forEach(property => {
+    return {
+      preconditionals: property.lhs,
+      pbt_assertions: {
+        name: property.name,
+        cnf: property.rhs
+      }
+    }
+
+  })
+
   
   // Create a single result with all the information
-  const result: PropertyTestResult = {
+  const result: ParseResult = {
     state_variables: Array.from(uniqueStateVars),
     pbt_variables: pbtVariables,
     branches,
-    preconditionals: properties.map(p => p.lhs),
-    pbt_assertions: pbtAssertions
+    assertions
   };
   
   return [result];
@@ -368,13 +375,6 @@ function extractConditionsInCNF(expression: Node): Condition[][] {
   return [[]]; // Return empty clause as fallback
 }
 
-// Keep the original function for backward compatibility
-function extractConditions(expression: Node): Condition[] {
-  const cnfConditions = extractConditionsInCNF(expression);
-  // Flatten the CNF to a single array of conditions (for backward compatibility)
-  return cnfConditions.flatMap(clause => clause);
-}
-
 // Extract transitions by analyzing the entire component file
 export function scanComponentTransitions(filePath: string): { [branch: number]: Transition[] } {
   const fs = require('fs');
@@ -489,7 +489,7 @@ export function scanComponentTransitions(filePath: string): { [branch: number]: 
 export function testComponentProperties(
   filePath: string, 
   properties: PBTAssertion[]
-): PropertyTestResult[] {
+): ParseResult[] {
   const results = parseReactComponent(filePath, properties);
   
   // Scan for transitions directly

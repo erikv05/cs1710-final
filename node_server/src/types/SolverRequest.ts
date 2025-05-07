@@ -14,15 +14,27 @@ export interface Branch {
   transitions: Transition[];   // State variable transitions
 }
 
-export interface PbtAssertion {
+export interface PBTOutAssertion {
   name: string;
   cnf: Literal[][];
+}
+
+export interface AssertionSet {
+  preconditionals: Literal[][];
+  pbt_assertions: PBTOutAssertion;
 }
 
 export interface SolverRequest {
   state_variables: string[];
   pbt_variables: string[];
   branches: Branch[];
-  preconditionals: Literal[];
-  pbt_assertions: PbtAssertion;
+  preconditionals: Literal[][];
+  pbt_assertions: PBTOutAssertion;
 } 
+
+export interface ParseResult {
+  state_variables: string[];
+  pbt_variables: string[];
+  branches: Branch[];
+  assertions: AssertionSet[];
+}
