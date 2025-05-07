@@ -6,7 +6,7 @@ import fs from 'fs';
 // console.log(checkHtmlPropertyValueByFilepath('./test.html', 'test-class', 'rawText', 'Hello World2'));
 // Works for ID selectors too:
 // console.log(checkHtmlPropertyValueByFilepath('./test.html', 'test-id', 'rawText', 'Hello World2'));
-function checkHtmlPropertyValueByFilepath(htmlFilepath, cssClassOrId, property, value) {
+function checkHtmlPropertyValueByFilepath(htmlFilepath: string, cssClassOrId: string, property: string, value: any): boolean {
     // Read file
     const htmlCode = fs.readFileSync(htmlFilepath, 'utf8');
 
@@ -14,7 +14,7 @@ function checkHtmlPropertyValueByFilepath(htmlFilepath, cssClassOrId, property, 
 }
 
 // USE THIS IF YOU HAVE THE HTML STRING ALREADY
-export function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value) {
+export function checkHtmlPropertyValue(htmlString: string, cssClassOrId: string, property: string, value: any): boolean {
     // Convert to object with html parser
     const root = parse(htmlString);
 
@@ -34,6 +34,13 @@ export function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value
                 } else if (value === attrValue) {
                     return true;
                 }
+            } 
+            // Check if the property might be an HTML attribute (including accessibility attributes)
+            else if (element.attributes && (property in element.attributes || element.hasAttribute(property))) {
+                const attrValue = element.getAttribute(property);
+                if (attrValue && (typeof attrValue === "string" ? attrValue.includes(value) : attrValue === value)) {
+                    return true;
+                }
             }
         }
         
@@ -50,20 +57,39 @@ export function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value
                 console.log(attrValue)
                 console.log(value)
                 return typeof attrValue === "string" ? attrValue.includes(value) : attrValue === value;
+            } 
+            // Check if the property might be an HTML attribute (including accessibility attributes)
+            else if (element.attributes && (property in element.attributes || element.hasAttribute(property))) {
+                const attrValue = element.getAttribute(property);
+                if (attrValue && (typeof attrValue === "string" ? attrValue.includes(value) : attrValue === value)) {
+                    return true;
+                }
+                return false;
             } else {
                 // Property doesn't exist
                 return false;
             }
-        } 
+        }
         
+        // If we get here, no matching elements were found with the given class or ID
+        return false;
     } else {
         // Look through all elements in the document deep recursively
         function checkRecursively(node: any) {
             // Check current node
-            if (typeof node[property] !== "string") {
-                if (property in node && node[property] === value) return true;
-            } else {
-                if (property in node && node[property].includes(value)) return true;
+            if (property in node) {
+                if (typeof node[property] !== "string") {
+                    if (node[property] === value) return true;
+                } else {
+                    if (node[property].includes(value)) return true;
+                }
+            }
+            // Check if the property might be an HTML attribute (including accessibility attributes)
+            else if (node.attributes && (property in node.attributes || node.hasAttribute?.(property))) {
+                const attrValue = node.getAttribute(property);
+                if (attrValue && (typeof attrValue === "string" ? attrValue.includes(value) : attrValue === value)) {
+                    return true;
+                }
             }
 
             // Recurse on children
@@ -78,9 +104,6 @@ export function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value
             return false;
         }
 
-        if (checkRecursively(root)) return true;
+        return checkRecursively(root);
     }
-        
-    // No elements with the given class or id had the property-value pair
-    return false;
 }
