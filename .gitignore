@@ -1,3 +1,8 @@
+# Node.js stuff
 dist/
 node_modules/
 .env
+
+# Python stuff
+.venv/
+__pycache__/
