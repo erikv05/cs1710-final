@@ -128,13 +128,43 @@ function parseConditionToCNF(condition: string): Literal[][] {
   // Now we can safely split by OR operator without worrying about parentheses
   const orClauses = normalizedExpression.split('|');
   
-  return orClauses.map(orClause => {
+  // For CNF format, OR operations within a clause should be represented
+  // as a single clause containing multiple literals.
+  // We need a single clause with all the literals joined by OR
+  if (orClauses.length > 1) {
+    // This is an OR expression, create a single clause with all literals
+    const combinedClause: Literal[] = [];
+    
+    for (const orClause of orClauses) {
+      // Replace any expression placeholders with their actual expressions
+      let processedClause = orClause;
+      const exprRegex = /__EXPR(\d+)__/g;
+      let exprMatch;
+      
+      while ((exprMatch = exprRegex.exec(orClause)) !== null) {
+        const exprIndex = parseInt(exprMatch[1]);
+        const innerExpression = parenthesizedExpressions[exprIndex];
+        processedClause = processedClause.replace(
+          `__EXPR${exprIndex}__`, 
+          innerExpression
+        );
+      }
+      
+      // Process each OR term and add to the combined clause
+      const literals = processClause(processedClause);
+      combinedClause.push(...literals);
+    }
+    
+    // Return a single clause with all the OR literals
+    return [combinedClause];
+  } else {
+    // This is not an OR expression, process normally
     // Replace any expression placeholders with their actual expressions
-    let processedClause = orClause;
+    let processedClause = orClauses[0];
     const exprRegex = /__EXPR(\d+)__/g;
     let exprMatch;
     
-    while ((exprMatch = exprRegex.exec(orClause)) !== null) {
+    while ((exprMatch = exprRegex.exec(orClauses[0])) !== null) {
       const exprIndex = parseInt(exprMatch[1]);
       const innerExpression = parenthesizedExpressions[exprIndex];
       processedClause = processedClause.replace(
@@ -143,9 +173,12 @@ function parseConditionToCNF(condition: string): Literal[][] {
       );
     }
     
-    // Process the clause (handles ANDs within it)
-    return processClause(processedClause);
-  });
+    // For a normal AND expression, process into multiple clauses
+    const clauses = processClause(processedClause);
+    
+    // For proper CNF, each literal in an AND expression becomes its own clause
+    return clauses.map(literal => [literal]);
+  }
 }
 
 // Parse expected string into CNF format
