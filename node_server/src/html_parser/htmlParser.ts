@@ -29,7 +29,9 @@ export function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value
             // Check if the property exists and has the expected value
             if (property in element) {
                 const attrValue = element[property];
-                if (value === attrValue) {
+                if (typeof attrValue === "string" && attrValue.includes(value)) {
+                    return true
+                } else if (value === attrValue) {
                     return true;
                 }
             }
@@ -45,7 +47,9 @@ export function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value
             // Check if the property exists and has the expected value
             if (property in element) {
                 const attrValue = element[property];
-                return value === attrValue;
+                console.log(attrValue)
+                console.log(value)
+                return typeof attrValue === "string" ? attrValue.includes(value) : attrValue === value;
             } else {
                 // Property doesn't exist
                 return false;
@@ -56,9 +60,10 @@ export function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value
         // Look through all elements in the document deep recursively
         function checkRecursively(node: any) {
             // Check current node
-            console.log("LOOK AT THIS", typeof node[property])
-            if (property in node && node[property].includes(value)) {
-                return true;
+            if (typeof node[property] !== "string") {
+                if (property in node && node[property] === value) return true;
+            } else {
+                if (property in node && node[property].includes(value)) return true;
             }
 
             // Recurse on children
