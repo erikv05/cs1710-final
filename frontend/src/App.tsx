@@ -165,6 +165,26 @@ const TestResultDisplay = ({ result }: TestResultDisplayProps) => {
   const violatedPbt = result.z3Result?.violated_pbt || '';
   const failingStates = result.z3Result?.states || [];
   
+  // Get error type specific messages
+  let errorTypeDisplay = '';
+  if (result.errorType) {
+    switch (result.errorType) {
+      case 'ASSERTION_FORMAT':
+        errorTypeDisplay = 'Assertion Format Error';
+        break;
+      case 'STATE_VARIABLE':
+        errorTypeDisplay = 'State Variable Error';
+        break;
+      case 'CNF_FORMAT':
+        errorTypeDisplay = 'CNF Format Error';
+        break;
+      case 'GENERAL':
+      default:
+        errorTypeDisplay = 'General Error';
+        break;
+    }
+  }
+  
   return (
     <Box 
       sx={{ 
@@ -199,7 +219,7 @@ const TestResultDisplay = ({ result }: TestResultDisplayProps) => {
           fontSize: '0.85rem',
           fontWeight: 500
         }}>
-          {isPassed ? 'Success' : 'Failed'}
+          {isPassed ? 'PASSED' : result.errorType ? errorTypeDisplay : 'FAILED'}
         </Box>
       </Box>
       
@@ -210,32 +230,34 @@ const TestResultDisplay = ({ result }: TestResultDisplayProps) => {
       )}
       
       {!isPassed && (
-        <>
-          {violatedPbt && (
-            <Box sx={{ mt: 2, mb: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                Violated Property: <code style={{ backgroundColor: 'rgba(0,0,0,0.1)', padding: '2px 4px', borderRadius: '3px' }}>{violatedPbt}</code>
+        <Box sx={{ mt: 2 }}>
+          <Typography sx={{ fontWeight: 600, mb: 1 }}>
+            {result.isStateVarError ? 'State Variable Error:' : 'Error Details:'}
+          </Typography>
+          
+          {result.isStateVarError ? (
+            <Box sx={{ bgcolor: 'rgba(0,0,0,0.1)', p: 2, borderRadius: 1, mb: 2 }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                {result.errorMessage}
+              </Typography>
+              
+              <Typography variant="body2" sx={{ mt: 2, fontWeight: 500 }}>
+                Make sure to only use actual state variables from your React component in your conditions.
+              </Typography>
+              <Typography variant="body2" sx={{ fontStyle: 'italic', mt: 1 }}>
+                These are variables created using the useState hook.
               </Typography>
             </Box>
+          ) : (
+            <Typography variant="body2" sx={{ px: 1, py: 1.5, bgcolor: 'rgba(0,0,0,0.1)', borderRadius: 1 }}>
+              {result.errorMessage || (violatedPbt ? `Property violated: ${violatedPbt}` : 'Unknown error')}
+            </Typography>
           )}
           
-          {failingStates.length > 0 && (
+          {failingStates && failingStates.length > 0 && (
             <StateTable states={failingStates} />
           )}
-          
-          {result.errorMessage && (
-            <Box sx={{ 
-              mt: 2, 
-              p: 2, 
-              bgcolor: 'rgba(0,0,0,0.1)', 
-              borderRadius: 1.5,
-              fontSize: '0.9rem',
-              fontFamily: 'monospace'
-            }}>
-              {result.errorMessage}
-            </Box>
-          )}
-        </>
+        </Box>
       )}
     </Box>
   );
@@ -468,3 +490,4 @@ function App() {
 }
 
 export default App;
+

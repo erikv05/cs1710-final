@@ -8,6 +8,28 @@ interface Condition {
   value: boolean;
 }
 
+// New validation interfaces and classes
+interface ValidationError {
+  message: string;
+  assertionName?: string;
+  errorType: 'STATE_VARIABLE' | 'ASSERTION_FORMAT' | 'CNF_FORMAT' | 'GENERAL';
+}
+
+class ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+
+  constructor() {
+    this.valid = true;
+    this.errors = [];
+  }
+
+  addError(error: ValidationError) {
+    this.valid = false;
+    this.errors.push(error);
+  }
+}
+
 // Define a handler interface for processing different assertion types
 interface AssertionHandler {
   canHandle(assertion: PBTAssertion): boolean;
@@ -42,6 +64,108 @@ function processAssertion(assertion: PBTAssertion, content: string): boolean {
   return false;
 }
 
+// New validation functions
+function validateAssertionFormat(properties: PBTAssertion[]): ValidationResult {
+  const result = new ValidationResult();
+
+  properties.forEach(property => {
+    if (!property.rhs) return;
+
+    // Check format of assertions
+    property.rhs.forEach(clause => {
+      clause.forEach(lit => {
+        // The assertion must be either the name or !name
+        if (lit.name !== property.name && lit.name !== property.name.replace(/^!/, '')) {
+          result.addError({
+            message: `Invalid assertion format. Expected "${property.name}" or "!${property.name}", got "${lit.name}"`,
+            assertionName: property.name,
+            errorType: 'ASSERTION_FORMAT'
+          });
+        }
+      });
+    });
+  });
+
+  return result;
+}
+
+function validateStateVariables(properties: PBTAssertion[], stateVars: string[]): ValidationResult {
+  const result = new ValidationResult();
+  const stateVarSet = new Set(stateVars);
+
+  // Check for each property
+  properties.forEach(property => {
+    // First check LHS (preconditions)
+    if (property.lhs) {
+      property.lhs.forEach(clause => {
+        clause.forEach(lit => {
+          // Skip default placeholder variables that might be added for empty conditions
+          if (lit.name === 'default') return;
+          
+          if (!stateVarSet.has(lit.name)) {
+            result.addError({
+              message: `State variable "${lit.name}" used in condition does not exist in the component`,
+              assertionName: property.name,
+              errorType: 'STATE_VARIABLE'
+            });
+          }
+        });
+      });
+    }
+  });
+
+  return result;
+}
+
+function validateCNF(properties: PBTAssertion[]): ValidationResult {
+  const result = new ValidationResult();
+  
+  // Validating CNF structure is complex and would involve custom logic
+  // This is a simplified check
+  
+  properties.forEach(property => {
+    // Check LHS format (must be an array of arrays of literals)
+    if (!Array.isArray(property.lhs)) {
+      result.addError({
+        message: `Precondition for "${property.name}" is not in CNF format`,
+        assertionName: property.name,
+        errorType: 'CNF_FORMAT'
+      });
+    } else {
+      property.lhs.forEach((clause, i) => {
+        if (!Array.isArray(clause)) {
+          result.addError({
+            message: `Clause ${i+1} in precondition for "${property.name}" is not an array`,
+            assertionName: property.name,
+            errorType: 'CNF_FORMAT'
+          });
+        }
+      });
+    }
+    
+    // Check RHS format
+    if (!Array.isArray(property.rhs)) {
+      result.addError({
+        message: `Assertion for "${property.name}" is not in CNF format`,
+        assertionName: property.name,
+        errorType: 'CNF_FORMAT'
+      });
+    } else {
+      property.rhs.forEach((clause, i) => {
+        if (!Array.isArray(clause)) {
+          result.addError({
+            message: `Clause ${i+1} in assertion for "${property.name}" is not an array`,
+            assertionName: property.name,
+            errorType: 'CNF_FORMAT'
+          });
+        }
+      });
+    }
+  });
+  
+  return result;
+}
+
 export function parseReactComponent(
   filePath: string, 
   properties: PBTAssertion[]
@@ -68,6 +192,11 @@ export function parseReactComponent(
   
   // Scan entire file for useState hooks to build a mapping of setters to state variables
   const stateSetterMap = extractUseStateHooks(sourceFile);
+  
+  // Add all state variables to uniqueStateVars
+  for (const [_, stateVar] of stateSetterMap.entries()) {
+    uniqueStateVars.add(stateVar);
+  }
   
   // Only process top-level if statements (not nested in other if-else chains)
   const topLevelIfStatements = ifStatements.filter(ifStmt => {
@@ -233,10 +362,39 @@ function extractUseStateHooks(sourceFile: Node): Map<string, string> {
         if (Node.isArrayBindingPattern(destructuredNames)) {
           const elements = destructuredNames.getElements();
           if (elements.length >= 2) {
-            const stateVar = elements[0].getText();
-            const stateSetter = elements[1].getText();
+            // Handle cases where there might be type annotations on the state variable
+            let stateVar = elements[0].getText().trim();
+            // Remove type annotations if present
+            if (stateVar.includes(':')) {
+              stateVar = stateVar.split(':')[0].trim();
+            }
+            
+            let stateSetter = elements[1].getText().trim();
+            // Remove type annotations if present
+            if (stateSetter.includes(':')) {
+              stateSetter = stateSetter.split(':')[0].trim();
+            }
+            
             stateSetterMap.set(stateSetter, stateVar);
           }
+        }
+      }
+    }
+  }
+  
+  // Also check for useState calls with direct assignment (const count = useState(0)[0])
+  const variableDeclarations = sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration);
+  for (const declaration of variableDeclarations) {
+    const initializer = declaration.getInitializer();
+    if (initializer && Node.isElementAccessExpression(initializer)) {
+      const expression = initializer.getExpression();
+      if (Node.isCallExpression(expression)) {
+        const callee = expression.getExpression();
+        if (Node.isIdentifier(callee) && callee.getText() === 'useState') {
+          // This is a useState call with direct array access
+          const varName = declaration.getName();
+          // For direct access, we may not have a setter mapping, but we still want to record the state var
+          stateSetterMap.set(`set${varName.charAt(0).toUpperCase() + varName.slice(1)}`, varName);
         }
       }
     }
@@ -394,13 +552,22 @@ export function scanComponentTransitions(filePath: string): { [branch: number]: 
   // Find state variables and their setters
   const stateSetterMap = new Map<string, string>();
   
-  // Extract useState declarations
-  const useStateRegex = /const\s+\[\s*(\w+)\s*,\s*(\w+)\s*\]\s*=\s*useState/g;
+  // Extract useState declarations - first approach with standard pattern
+  const useStateRegex = /const\s+\[\s*(\w+)(?:\s*:\s*[^,]*)?\s*,\s*(\w+)(?:\s*:\s*[^,]*)?\s*\]\s*=\s*useState/g;
   let match;
   
   while ((match = useStateRegex.exec(content)) !== null) {
     const stateVar = match[1];
     const setter = match[2];
+    stateSetterMap.set(setter, stateVar);
+  }
+  
+  // Extract useState with direct access (const count = useState(0)[0])
+  const directAccessRegex = /const\s+(\w+)(?:\s*:\s*[^=]*)?\s*=\s*useState\([^)]*\)\[0\]/g;
+  while ((match = directAccessRegex.exec(content)) !== null) {
+    const stateVar = match[1];
+    // Simulate a setter name based on convention
+    const setter = `set${stateVar.charAt(0).toUpperCase() + stateVar.slice(1)}`;
     stateSetterMap.set(setter, stateVar);
   }
   
@@ -497,20 +664,54 @@ export function scanComponentTransitions(filePath: string): { [branch: number]: 
 export function testComponentProperties(
   filePath: string, 
   properties: PBTAssertion[]
-): ReactParseResult {
-  const result = parseReactComponent(filePath, properties);
-  
-  // Scan for transitions directly
-  const branchTransitions = scanComponentTransitions(filePath);
-  
-  // Update each branch with its transitions
-  let branchIndex = 0;
-  result.branches.forEach(branch => {
-    branchIndex++;
-    if (branchTransitions[branchIndex] && branchTransitions[branchIndex].length > 0) {
-      branch.transitions = branchTransitions[branchIndex];
+): ReactParseResult | { error: ValidationError[] } {
+  try {
+    // Parse the component to get state variables and other info
+    const result = parseReactComponent(filePath, properties);
+    
+    // Validate that the assertions follow the required format
+    const assertionValidation = validateAssertionFormat(properties);
+    if (!assertionValidation.valid) {
+      return { error: assertionValidation.errors };
     }
-  });
-  
-  return result;
+    
+    // Validate that all variables in conditions are state variables
+    const stateVarValidation = validateStateVariables(properties, result.state_variables);
+    if (!stateVarValidation.valid) {
+      // Add information about available state variables to the first error
+      if (stateVarValidation.errors.length > 0 && stateVarValidation.errors[0].errorType === 'STATE_VARIABLE') {
+        const availableStateVars = result.state_variables.join(', ');
+        stateVarValidation.errors[0].message += `. Available state variables are: ${availableStateVars}`;
+      }
+      return { error: stateVarValidation.errors };
+    }
+    
+    // Validate CNF format
+    const cnfValidation = validateCNF(properties);
+    if (!cnfValidation.valid) {
+      return { error: cnfValidation.errors };
+    }
+    
+    // Scan for transitions directly
+    const branchTransitions = scanComponentTransitions(filePath);
+    
+    // Update each branch with its transitions
+    let branchIndex = 0;
+    result.branches.forEach(branch => {
+      branchIndex++;
+      if (branchTransitions[branchIndex] && branchTransitions[branchIndex].length > 0) {
+        branch.transitions = branchTransitions[branchIndex];
+      }
+    });
+    
+    return result;
+  } catch (err: any) {
+    console.error("Error in testComponentProperties:", err);
+    return { 
+      error: [{
+        message: `Error processing component: ${err.message || "Unknown error"}`,
+        errorType: 'GENERAL'
+      }]
+    };
+  }
 }

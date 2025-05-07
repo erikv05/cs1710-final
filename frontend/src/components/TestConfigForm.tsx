@@ -149,13 +149,21 @@ function parseConditionToCNF(condition: string): Literal[][] {
 }
 
 // Parse expected string into CNF format
-function parseExpectedToCNF(expected: string): Literal[][] {
+function parseExpectedToCNF(expected: string, assertionName: string): Literal[][] | { error: string } {
   if (!expected.trim()) {
     // Default to "true" if expected is empty
     return [[{ name: 'result', assignment: true }]];
   }
 
   const cleanExpected = expected.trim();
+  
+  // Validate that the expected value follows the required format: either "assertionName" or "!assertionName"
+  if (cleanExpected !== assertionName && cleanExpected !== `!${assertionName}`) {
+    return { 
+      error: `Expected value must be either "${assertionName}" or "!${assertionName}"`
+    };
+  }
+
   let literal: Literal;
 
   // Check if the expected value is negated
@@ -232,6 +240,16 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
         setShowError(true);
         return;
       }
+      
+      // Validate expected format
+      if (assertion.expected) {
+        const expectedResult = parseExpectedToCNF(assertion.expected, assertion.name);
+        if ('error' in expectedResult) {
+          setError(expectedResult.error);
+          setShowError(true);
+          return;
+        }
+      }
     }
 
     try {
@@ -248,7 +266,7 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
           
           // Parse the expected string to CNF format
           const rhs = assertion.expected ? 
-            parseExpectedToCNF(assertion.expected) : 
+            parseExpectedToCNF(assertion.expected, assertion.name) as Literal[][] : 
             [[{ name: 'result', assignment: true }]];
           
           return {
@@ -268,7 +286,7 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
       // Ensure data has the correct format
       if (response.data && response.data.results && Array.isArray(response.data.results)) {
         // Transform the data to match our PropertyTestResult interface
-        const formattedResults = response.data.results.map((result: Z3Response | { error: string }, index: number) => {
+        const formattedResults = response.data.results.map((result: Z3Response | { error: string, errorType?: string, isStateVarError?: boolean }, index: number) => {
           const assertionInfo = {
             name: assertions[index].name,
             type: "TextPBTAssertion",
@@ -280,6 +298,8 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
               assertion: assertionInfo,
               success: false,
               errorMessage: result.error,
+              errorType: result.errorType || 'GENERAL',
+              isStateVarError: result.isStateVarError || false,
               z3Result: null
             };
           }

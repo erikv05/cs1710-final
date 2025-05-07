@@ -9,5 +9,7 @@ export interface PropertyTestResult {
   };
   success: boolean;
   errorMessage?: string;
+  errorType?: 'STATE_VARIABLE' | 'ASSERTION_FORMAT' | 'CNF_FORMAT' | 'GENERAL';
+  isStateVarError?: boolean;
   z3Result?: Z3Response | null;
 } 

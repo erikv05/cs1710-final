@@ -5,6 +5,12 @@ import { testComponentProperties } from './utils/testComponentProperties';
 import { ReactParseResult, SolverRequest, PBTOutAssertion } from './types/SolverRequest';
 import { Z3ResponseSchema, Z3Response } from './types/Z3Response';
 
+interface ValidationError {
+  message: string;
+  assertionName?: string;
+  errorType: 'STATE_VARIABLE' | 'ASSERTION_FORMAT' | 'CNF_FORMAT' | 'GENERAL';
+}
+
 const app = express();
 const port = 3000; // Yes this is hardcoded sue me
 
@@ -48,15 +54,55 @@ app.post('/', async (req, res) => {
     console.log("Number of assertions: ", textAssertions.length)
     console.log("Use Stateful Testing: ", useStatefulTesting)
 
-    let result: ReactParseResult;
+    // Call testComponentProperties and handle both success and error cases
+    const parseResult2 = testComponentProperties(filePath, textAssertions);
 
-    try {
-        result = testComponentProperties(filePath, textAssertions);
-    } catch (error: any) {
-        res.status(500).send('Error processing the file: ' + error.message);
+    // Check if the result contains validation errors
+    if ('error' in parseResult2) {
+        console.log("Validation errors:", parseResult2.error);
+        
+        // Map validation errors to results that can be displayed in the frontend
+        const errorResults = textAssertions.map((assertion, index) => {
+            // Find errors specific to this assertion
+            const assertionErrors = parseResult2.error.filter(err => 
+                err.assertionName === assertion.name || !err.assertionName
+            );
+            
+            if (assertionErrors.length > 0) {
+                return {
+                    error: assertionErrors.map(err => err.message).join(", "),
+                    errorType: assertionErrors[0].errorType,
+                    // Add a specific flag for state variable errors so the frontend can handle them specially
+                    isStateVarError: assertionErrors[0].errorType === 'STATE_VARIABLE'
+                };
+            }
+            
+            // If no specific errors for this assertion, but there are general errors
+            if (parseResult2.error.length > 0) {
+                const generalErrors = parseResult2.error.filter(err => !err.assertionName);
+                if (generalErrors.length > 0) {
+                    return {
+                        error: generalErrors.map(err => err.message).join(", "),
+                        errorType: generalErrors[0].errorType,
+                        isStateVarError: generalErrors[0].errorType === 'STATE_VARIABLE'
+                    };
+                }
+            }
+            
+            return {
+                error: "Unknown validation error",
+                errorType: "GENERAL",
+                isStateVarError: false
+            };
+        });
+        
+        res.send({
+            "results": errorResults
+        });
         return;
     }
 
+    const result = parseResult2 as ReactParseResult;
     console.log("Achieved valid parse result");
 
     let tests: SolverRequest[] = [];
