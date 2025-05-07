@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { NodeAPIRequestSchema, TextPBTAssertion } from './types/PropertyDefinition';
 import { testComponentProperties } from './utils/testComponentProperties';
-import { ReactParseResult, SolverRequest } from './types/SolverRequest';
+import { ReactParseResult, SolverRequest, PBTOutAssertion } from './types/SolverRequest';
 import { Z3ResponseSchema, Z3Response } from './types/Z3Response';
 
 const app = express();
@@ -10,6 +10,26 @@ const port = 3000; // Yes this is hardcoded sue me
 
 app.use(express.json());
 app.use(cors());
+
+// Helper function to negate a PBT assertion
+function negatePbtAssertion(assertion: PBTOutAssertion): PBTOutAssertion {
+    // Create a deep copy of the assertion
+    const negatedAssertion: PBTOutAssertion = {
+        name: assertion.name,
+        cnf: JSON.parse(JSON.stringify(assertion.cnf))
+    };
+    
+    // There should only be one clause with one literal as mentioned
+    // This will safely handle even if there are more, but the structure is expected to be [[literal]]
+    for (let i = 0; i < negatedAssertion.cnf.length; i++) {
+        for (let j = 0; j < negatedAssertion.cnf[i].length; j++) {
+            // Negate the assignment value of the literal
+            negatedAssertion.cnf[i][j].assignment = !negatedAssertion.cnf[i][j].assignment;
+        }
+    }
+    
+    return negatedAssertion;
+}
 
 app.post('/', async (req, res) => {
     const parseResult = NodeAPIRequestSchema.safeParse(req.body);
@@ -50,12 +70,15 @@ app.post('/', async (req, res) => {
                 transitions: [] // Empty the transitions array when stateful testing is disabled
             }));
 
+        // Negate the pbt_assertion to represent unsafe states as expected by Z3
+        const negatedAssertion = negatePbtAssertion(result.assertions[i].pbt_assertions);
+
         const test = {
             state_variables: result.state_variables,
             pbt_variables: result.pbt_variables,
             branches: branches,
             preconditionals: result.assertions[i].preconditionals,
-            pbt_assertion: result.assertions[i].pbt_assertions
+            pbt_assertion: negatedAssertion
         };
         console.log("Test variables:", {
             state_variables: test.state_variables,

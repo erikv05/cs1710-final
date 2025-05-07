@@ -6,8 +6,6 @@ import {
   Box,
   Container,
   Paper,
-  Tabs,
-  Tab,
   Typography,
   Chip,
   Table,
@@ -18,7 +16,6 @@ import {
   TableRow
 } from '@mui/material';
 import type { PropertyTestResult } from './types/PropertyTestResult';
-import ExampleTest from './components/ExampleTest';
 import TestConfigForm from './components/TestConfigForm';
 import type { Literal } from './types/Z3Response';
 
@@ -250,23 +247,13 @@ const TestResults = ({ results }: { results: PropertyTestResult[] }) => {
       <Paper 
         sx={{ 
           p: 4, 
-          borderRadius: 2, 
-          boxShadow: theme => theme.palette.mode === 'dark' 
-            ? '0 8px 32px rgba(0, 0, 0, 0.2)'
-            : '0 8px 32px rgba(0, 0, 0, 0.05)'
+          borderRadius: 2,
+          textAlign: 'center',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
         }}
         className="fade-in"
       >
-        <Box sx={{ fontSize: '1.5rem', mb: 3, fontWeight: 600, letterSpacing: '-0.025em' }}>Test Results</Box>
-        <Box sx={{ 
-          p: 3, 
-          textAlign: 'center', 
-          color: 'text.secondary',
-          bgcolor: 'background.paper',
-          borderRadius: 1.5
-        }}>
-          No test results to display
-        </Box>
+        <Typography color="text.secondary">No test results available</Typography>
       </Paper>
     );
   }
@@ -276,16 +263,25 @@ const TestResults = ({ results }: { results: PropertyTestResult[] }) => {
       sx={{ 
         p: 4, 
         borderRadius: 2,
-        boxShadow: theme => theme.palette.mode === 'dark' 
-          ? '0 8px 32px rgba(0, 0, 0, 0.2)'
-          : '0 8px 32px rgba(0, 0, 0, 0.05)'
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
       }}
       className="fade-in"
     >
-      <Box sx={{ fontSize: '1.5rem', mb: 3, fontWeight: 600, letterSpacing: '-0.025em' }}>Test Results</Box>
+      <Typography 
+        variant="h5" 
+        gutterBottom 
+        sx={{ 
+          fontWeight: 600, 
+          mb: 3,
+          letterSpacing: '-0.025em' 
+        }}
+      >
+        Test Results
+      </Typography>
+      
       <Box>
-        {results.map((result, i) => (
-          <TestResultDisplay key={i} result={result} />
+        {results.map((result, index) => (
+          <TestResultDisplay key={index} result={result} />
         ))}
       </Box>
     </Paper>
@@ -295,7 +291,6 @@ const TestResults = ({ results }: { results: PropertyTestResult[] }) => {
 function App() {
   const [results, setResults] = useState<PropertyTestResult[] | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [tabValue, setTabValue] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const theme = createTheme({
@@ -403,13 +398,6 @@ function App() {
     setIsDarkMode(!isDarkMode);
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-    // Clear results and errors when switching tabs
-    setResults(null);
-    setError(null);
-  };
-
   // Fix the type incompatibility by using this typed wrapper
   const handleSetResults = (newResults: PropertyTestResult[] | null) => {
     if (!newResults) {
@@ -454,49 +442,7 @@ function App() {
         <Container maxWidth="lg" sx={{ p: 2 }}>
           <AppHeader toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
           
-          <Paper 
-            sx={{ 
-              borderRadius: 2, 
-              mb: 4, 
-              overflow: 'hidden',
-              boxShadow: theme => theme.palette.mode === 'dark' 
-                ? '0 8px 32px rgba(0, 0, 0, 0.2)'
-                : '0 8px 32px rgba(0, 0, 0, 0.05)',
-            }}
-          >
-            <Tabs 
-              value={tabValue} 
-              onChange={handleTabChange} 
-              aria-label="test options"
-              sx={{
-                '& .MuiTabs-flexContainer': {
-                  px: 2
-                }
-              }}
-            >
-              <Tab 
-                label="Example Test" 
-                sx={{ 
-                  py: 2, 
-                  '&.Mui-selected': { 
-                    fontWeight: 600,
-                  }
-                }} 
-              />
-              <Tab 
-                label="Custom Test" 
-                sx={{ 
-                  py: 2, 
-                  '&.Mui-selected': { 
-                    fontWeight: 600,
-                  }
-                }} 
-              />
-            </Tabs>
-          </Paper>
-          
-          {tabValue === 0 && <ExampleTest setResults={handleSetResults} />}
-          {tabValue === 1 && <TestConfigForm setResults={handleSetResults} />}
+          <TestConfigForm setResults={handleSetResults} />
           
           {error && (
             <Paper 
