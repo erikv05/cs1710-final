@@ -1,5 +1,5 @@
-const { parse } = require('node-html-parser');
-const fs = require('fs');
+import { parse } from 'node-html-parser';
+import fs from 'fs';
 
 // USE THIS FOR PROPERTY VALIDATION.
 // Works for class selectors:
@@ -14,7 +14,7 @@ function checkHtmlPropertyValueByFilepath(htmlFilepath, cssClassOrId, property, 
 }
 
 // USE THIS IF YOU HAVE THE HTML STRING ALREADY
-function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value) {
+export function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value) {
     // Convert to object with html parser
     const root = parse(htmlString);
 
@@ -29,7 +29,7 @@ function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value) {
             // Check if the property exists and has the expected value
             if (property in element) {
                 const attrValue = element[property];
-                if (attrValue === value) {
+                if (value === attrValue) {
                     return true;
                 }
             }
@@ -45,7 +45,7 @@ function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value) {
             // Check if the property exists and has the expected value
             if (property in element) {
                 const attrValue = element[property];
-                return attrValue === value;
+                return value === attrValue;
             } else {
                 // Property doesn't exist
                 return false;
@@ -54,9 +54,10 @@ function checkHtmlPropertyValue(htmlString, cssClassOrId, property, value) {
         
     } else {
         // Look through all elements in the document deep recursively
-        function checkRecursively(node) {
+        function checkRecursively(node: any) {
             // Check current node
-            if (property in node && node[property] === value) {
+            console.log("LOOK AT THIS", typeof node[property])
+            if (property in node && node[property].includes(value)) {
                 return true;
             }
 

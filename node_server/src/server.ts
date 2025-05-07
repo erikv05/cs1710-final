@@ -150,7 +150,7 @@ app.post('/', async (req, res) => {
 
     const z3Results = await Promise.all(tests.map(async (test) => {
         try {
-            console.log("Sending test to Z3:", JSON.stringify(test, null, 2));
+            // console.log("Sending test to Z3:", JSON.stringify(test, null, 2));
             const response = await fetch('http://localhost:8000/solve/', {
                 method: 'POST',
                 headers: {

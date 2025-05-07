@@ -63,3 +63,8 @@ export const NodeAPIRequestSchema = z.object({
 });
 
 export type NodeAPIRequest = z.infer<typeof NodeAPIRequestSchema>;
+
+export interface Literal {
+  name: string,
+  assignment: boolean
+}

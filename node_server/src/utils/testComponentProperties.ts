@@ -2,7 +2,7 @@ import { Project, SyntaxKind, Node, IfStatement } from "ts-morph";
 import { PBTAssertion, TextPBTAssertion, LabelPBTAssertion } from "../types/PropertyDefinition";
 import { ReactParseResult, AssertionSet } from "../types/SolverRequest";
 import { Branch, Literal, Transition } from "../types/SolverRequest";
-import { checkHtmlPropertyValue } from "../../../html_parser/htmlParser.js";
+import { checkHtmlPropertyValue } from "../html_parser/htmlParser";
 
 
 interface Condition {
