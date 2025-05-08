@@ -26,23 +26,26 @@ const ExampleComponent: React.FC<ExampleComponentProps> = ({ initialDarkMode = f
     // Rendering using if-else-if with CNF conditions
     if (isLoading && isDarkMode) {
         return (
-            <div className="example-component dark-mode">
-                <div className="loading-spinner">Loading...</div>
+            <div className="example-component dark-mode" aria-label="loading-dark-container">
+                <div className="loading-spinner" aria-label="loading-indicator">Loading...</div>
             </div>
         );
     } else if (isLoading && !isDarkMode) {
         return (
-            <div className="example-component light-mode">
-                <div className="loading-spinner">Loading...</div>
+            <div className="example-component light-mode" aria-label="loading-light-container">
+                <div className="loading-spinner" aria-label="loading-indicator">Loading...</div>
             </div>
         );
     } else if (!isLoading && isDarkMode) {
         return (
-            <div className="example-component dark-mode">
-                <div className="content">
+            <div className="example-component dark-mode" aria-label="content-dark-container">
+                <div className="content" aria-label="content-area">
                     <h2>Example Component</h2>
                     <p>This component has loaded successfully.</p>
-                    <button onClick={() => setIsDarkMode(false)}>
+                    <button 
+                        onClick={() => setIsDarkMode(false)}
+                        aria-label="toggle-light-mode"
+                    >
                         Switch to Light Mode
                     </button>
                 </div>
@@ -50,11 +53,14 @@ const ExampleComponent: React.FC<ExampleComponentProps> = ({ initialDarkMode = f
         );
     } else if (!isLoading && !isDarkMode) {
         return (
-            <div className="example-component light-mode">
-                <div className="content">
+            <div className="example-component light-mode" aria-label="content-light-container">
+                <div className="content" aria-label="content-area">
                     <h2>Example Component</h2>
                     <p>This component has loaded successfully.</p>
-                    <button onClick={toggleDarkMode}>
+                    <button 
+                        onClick={toggleDarkMode}
+                        aria-label="toggle-dark-mode"
+                    >
                         Switch to Dark Mode
                     </button>
                 </div>

@@ -30,6 +30,7 @@ interface Assertion {
   name: string;
   type: string;
   textToFind?: string;
+  labelToFind?: string;
   condition?: string;
   expected?: string;
 }
@@ -274,6 +275,21 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
         return;
       }
       
+      if (assertion.type === 'LabelPBTAssertion' && !assertion.labelToFind) {
+        setError('All label assertions must have a label to find');
+        setShowError(true);
+        return;
+      }
+      
+      // Check for unsupported logical operators
+      if (assertion.condition) {
+        if (assertion.condition.includes('&&') || assertion.condition.includes('||')) {
+          setError('Unsupported logical operators: Use single "&" for AND and "|" for OR operations');
+          setShowError(true);
+          return;
+        }
+      }
+      
       // Validate expected format
       if (assertion.expected) {
         const expectedResult = parseExpectedToCNF(assertion.expected, assertion.name);
@@ -302,12 +318,27 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
             parseExpectedToCNF(assertion.expected, assertion.name) as Literal[][] : 
             [[{ name: 'result', assignment: true }]];
           
-          return {
+          // Create the assertion with specific type fields
+          const baseAssertion = {
             name: assertion.name,
-            textToFind: assertion.textToFind,
             lhs,
             rhs
           };
+          
+          // Add specific fields based on assertion type
+          if (assertion.type === 'TextPBTAssertion') {
+            return {
+              ...baseAssertion,
+              textToFind: assertion.textToFind
+            };
+          } else if (assertion.type === 'LabelPBTAssertion') {
+            return {
+              ...baseAssertion,
+              labelToFind: assertion.labelToFind
+            };
+          }
+          
+          return baseAssertion;
         })
       };
       
@@ -322,8 +353,9 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
         const formattedResults = response.data.results.map((result: Z3Response | { error: string, errorType?: string, isStateVarError?: boolean }, index: number) => {
           const assertionInfo = {
             name: assertions[index].name,
-            type: "TextPBTAssertion",
-            textToFind: assertions[index].textToFind
+            type: assertions[index].type,
+            textToFind: assertions[index].textToFind,
+            labelToFind: assertions[index].labelToFind
           };
 
           if ('error' in result) {
@@ -568,6 +600,7 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
                       }}
                     >
                       <MenuItem value="TextPBTAssertion">Text Assertion</MenuItem>
+                      <MenuItem value="LabelPBTAssertion">Label Assertion</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
@@ -589,6 +622,29 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
                         }
                       }}
                     />
+                  </Box>
+                )}
+                
+                {assertion.type === 'LabelPBTAssertion' && (
+                  <Box sx={{ mb: 3 }}>
+                    <TextField
+                      fullWidth
+                      label="Accessibility Label to Find"
+                      value={assertion.labelToFind || ''}
+                      onChange={(e) =>
+                        handleAssertionChange(index, 'labelToFind', e.target.value)
+                      }
+                      variant="outlined"
+                      placeholder="e.g., submit-button"
+                      sx={{ 
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 1.5,
+                        }
+                      }}
+                    />
+                    <FormHelperText sx={{ ml: 1.5 }}>
+                      Checks for elements with aria-label, aria-labelledby, role, id, or data-testid attributes matching this value
+                    </FormHelperText>
                   </Box>
                 )}
 
@@ -614,7 +670,7 @@ const TestConfigForm = ({ setResults }: TestConfigFormProps) => {
                       handleAssertionChange(index, 'condition', e.target.value)
                     }
                     variant="outlined"
-                    placeholder="isLoading && isDarkMode"
+                    placeholder="isLoading & isDarkMode"
                     sx={{ 
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 1.5,
