@@ -12,13 +12,6 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.post("/testlit/")
-def read_item(lit: Literal):
-    print(lit)
-    print(lit.assignment)
-    return {"item_id": 1, "q": "blah"}
-
-
 
 @app.post("/solve/")
 def read_item(req: SolverRequest) -> SolverResponse:

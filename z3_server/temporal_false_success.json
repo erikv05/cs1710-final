@@ -1,0 +1,143 @@
+{
+    "state_variables": [
+      "isLoading",
+      "isDarkMode"
+    ],
+    "pbt_variables": [
+      "hasDarkModeButton"
+    ],
+    "branches": [
+      {
+        "conditions": [
+          [
+            {
+              "name": "isLoading",
+              "assignment": true
+            }
+          ],
+          [
+            {
+              "name": "isDarkMode",
+              "assignment": true
+            }
+          ]
+        ],
+        "implications": [
+          {
+            "name": "hasDarkModeButton",
+            "assignment": false
+          }
+        ],
+        "transitions": []
+      },
+      {
+        "conditions": [
+          [
+            {
+              "name": "isLoading",
+              "assignment": true
+            }
+          ],
+          [
+            {
+              "name": "isDarkMode",
+              "assignment": false
+            }
+          ]
+        ],
+        "implications": [
+          {
+            "name": "hasDarkModeButton",
+            "assignment": false
+          }
+        ],
+        "transitions": []
+      },
+      {
+        "conditions": [
+          [
+            {
+              "name": "isLoading",
+              "assignment": false
+            }
+          ],
+          [
+            {
+              "name": "isDarkMode",
+              "assignment": true
+            }
+          ]
+        ],
+        "implications": [
+          {
+            "name": "hasDarkModeButton",
+            "assignment": true
+          }
+        ],
+        "transitions": [
+          {
+            "name": "isDarkMode",
+            "assignments": [
+              false
+            ]
+          }
+        ]
+      },
+      {
+        "conditions": [
+          [
+            {
+              "name": "isLoading",
+              "assignment": false
+            }
+          ],
+          [
+            {
+              "name": "isDarkMode",
+              "assignment": false
+            }
+          ]
+        ],
+        "implications": [
+          {
+            "name": "hasDarkModeButton",
+            "assignment": true
+          }
+        ],
+        "transitions": [
+          {
+            "name": "isDarkMode",
+            "assignments": [
+              true,
+              false
+            ]
+          }
+        ]
+      }
+    ],
+    "preconditionals": [
+      [
+        {
+          "name": "isDarkMode",
+          "assignment": false
+        }
+      ],
+      [
+        {
+          "name": "isLoading",
+          "assignment": false
+        }
+      ]
+    ],
+    "pbt_assertion": {
+      "name": "hasDarkModeButton",
+      "cnf": [
+        [
+          {
+            "name": "hasDarkModeButton",
+            "assignment": false
+          }
+        ]
+      ]
+    }
+  }

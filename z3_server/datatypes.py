@@ -3,13 +3,10 @@ from typing import Union
 class Literal(BaseModel):
     name: str
     assignment: bool
-    #def __init__(self, name, assignmnet):
-     #   self.name = name
-      #  self.assignment = assignmnet
 
 class PbtAssertion(BaseModel): 
     name: str
-    cnf: list[list[Literal]]
+    cnf: list[list[Literal]] #If this is satisfiable, the test has failed
 
 class Transition(BaseModel):
     name: str
@@ -25,7 +22,7 @@ class SolverRequest(BaseModel):
     pbt_variables: list[str]
     branches: list[Branch]
     preconditionals: list[list[Literal]]
-    pbt_assertion: PbtAssertion
+    pbt_assertion: PbtAssertion 
 
 class SolverResponse(BaseModel):
     result : str #passed or failed
@@ -35,17 +32,3 @@ class SolverResponse(BaseModel):
 
 
 
-
-
-##VVVV OLD. IGNORE VVVV
-class SolverResponseEntry(BaseModel):
-    violated_pbt: str
-    transition_used: str
-    violating_state: list[Literal]
-
-
-
-class NamedImplication(BaseModel):
-    name: str
-    lhs: list[list[Literal]]
-    rhs: list[list[Literal]]
