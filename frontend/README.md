@@ -1,66 +1,25 @@
-# React Property-Based Testing Frontend
+# Installation and Initialization
 
-This is a frontend application for property-based testing in React components.
+1. run `npm i` (if you haven't already)
+2. run `npm run dev`
 
-## Features
+# Design
 
-- Input a React component filepath for testing
-- Define property-based test assertions
-- Support for testing text presence in components based on state conditions
-- Extensible architecture for adding more types of assertions
+This was written using the React + TS + Vite template.
 
-## Getting Started
+# Implementation
 
-### Prerequisites
+This supports a trivial implementation where a user is running the node server locally on port 3000 and the FastAPI Z3 server on port 8000. It then takes in some examples and passes them to the node_server, displaying the result.
 
-- Node.js (v16 or later)
-- npm or yarn
+# Limitations
 
-### Installation
+- Minimal input validation (e.g., CNF might not be valid, using multiple parens, etc.)
 
-1. Clone the repository
-2. Navigate to the frontend directory:
-   ```
-   cd frontend
-   ```
-3. Install dependencies:
-   ```
-   npm install
-   ```
+# Expansion
 
-### Running the Application
+To add more types of property-based tests, you must first define these tests and their handlers in the server. Then, you must provide:
 
-1. Start the frontend:
-   ```
-   npm run dev
-   ```
-   This will start the development server at http://localhost:5173
+1. A component to help the user add these tests (and the logic to send them to the server correclty) and add it to the test dropdown
+2. A component to handle the completion of the tests and the result from the server
 
-2. Make sure the backend server is running at http://localhost:3000
-
-## How to Use
-
-1. **Enter the filepath for your React component** in the input field
-2. **Add property-based test assertions** by clicking the "Add Assertion" button
-3. For each assertion:
-   - Provide a name for the assertion
-   - Select the assertion type (e.g., TextPBTAssertion)
-   - For TextPBTAssertion, enter the text to find in the component
-   - Define the left-hand side conditions using CNF (Conjunctive Normal Form)
-   - Define the right-hand side expected results
-4. **Run the tests** by clicking the "Run Tests" button
-5. View the results below
-
-## Example
-
-The example test checks a React component for:
-- Presence of "Loading..." text when isLoading is true
-- Presence of "Switch to Light Mode" button when isDarkMode is true and not loading
-- Presence of "Switch to Dark Mode" button when isDarkMode is false and not loading
-
-## Future Enhancements
-
-- Support for additional types of assertions (background color, element visibility, etc.)
-- Test scheduling and automation
-- Integration with test runners like Jest
-- Export/import of test configurations
+I wish we had more time to add an API so that end users can easily add these components and the handler, since new tests would seamlessly integrate into the frontend + server in that case. This would be a very neat extension of this project.

@@ -80,3 +80,7 @@ As of now, the Node backend has several major limitations:
 - Checking that the PBT assertions are written in CNF (done in the client)
 - Type safety for inputs using Zod
 - Checking that state variables defined in the client actually exist in the React component, and returning a 400 if not
+
+## Frontend
+
+The current frontend is simple and allows interaction with the node server. More information can be found in the component-level README.
